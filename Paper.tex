@@ -868,6 +868,14 @@ regime where the bin grid itself becomes the bottleneck.
 \subsection{Three-dimensional baseline: CLOVER head-to-head}
 \label{sec:clover}
 
+CLOVER~\cite{kamel2025clover} is the strongest among the 3D-only
+exact-GPU $k$NN methods surveyed in Section~\ref{sec:related-work}
+and the only published method on this list whose absolute timings
+exceed FastGraph's on real data. We include it here for two reasons:
+to acknowledge the result honestly, and to make explicit why it does
+not weaken the paper's claims for the latent-space regime in which
+FastGraph is intended to be deployed.
+
 \begin{figure}[H]
 \centering
   \includegraphics[width=0.95\textwidth]{clover_headtohead_d3.png}
@@ -878,24 +886,90 @@ regime where the bin grid itself becomes the bottleneck.
   hardcoded to $D{=}3$ at multiple sites
   (\texttt{assert(D == 3)} in \texttt{src/linear-scans.cu};
   \texttt{auto const dim = 3u} in \texttt{include/spatial.cuh}), so
-  this is the only dimension at which a direct comparison is
+  $d{=}3$ is the only dimensionality at which a direct comparison is
   possible.}
   \label{fig:clover_d3}
 \end{figure}
 
-CLOVER~\cite{kamel2025clover} is the strongest among the 3D-only
-exact-GPU $k$NN methods surveyed in the Related Work, and is the
-most credible threat to FastGraph in the one regime where its
-spatial structure applies. We run a head-to-head at $d{=}3$, $k{=}40$
-across HGCAL recHits, isotropic Gaussian, and uniform-cube data, so
-that any single-distribution artifact is visible. FastGraph
-maintains the lead on the anisotropic detector distribution, which
-is the deployment-relevant case; on uniform synthetic data CLOVER
-narrows the gap, consistent with its reported $4\times$-over-grid
-speedup on uniform-like benchmarks. The fundamental constraint
-remains: CLOVER, like LBVH-kNN and the RT-core methods, cannot
-extend to the $d{=}5$--$10$ latent-space workload that the rest of
-this paper is built around.
+\begin{table}[H]
+\centering
+\small
+\caption{Median wall-clock at $d{=}3$, $k{=}40$ on the same three
+input distributions, with both methods reading the same on-disk
+file per row. ``Hubs'' is CLOVER's spatio-graph index; ``Bitonic''
+is its linear-scan baseline (shown for reference, comparable in
+spirit to FAISS \texttt{IndexFlatL2}). CLOVER's reference
+implementation is hardcoded to $D{=}3$, so there is no extension to
+the $d{=}4$--$10$ regime.}
+\label{tab:clover-d3}
+\begin{tabular}{l|r|rr|r}
+\hline
+Distribution & $N$ & FastGraph & CLOVER hubs & CLOVER bitonic \\
+\hline
+HGCAL recHits & $10^5$ & 835\,ms     & \textbf{21\,ms}    & 42\,ms     \\
+              & $10^6$ & 7.63\,s     & \textbf{188\,ms}   & 3.79\,s    \\
+              & $5{\times}10^6$ & 169\,s & \textbf{1.62\,s} & 185\,s   \\
+\hline
+Gaussian $\mathcal{N}(0, I_3)$ & $10^5$ & \textbf{14\,ms} & 19\,ms     & 46\,ms     \\
+                               & $10^6$ & \textbf{183\,ms} & 207\,ms   & 3.41\,s    \\
+                               & $5{\times}10^6$ & 3.98\,s & \textbf{2.10\,s} & 169\,s \\
+\hline
+Uniform $[0, 1]^3$ & $10^5$ & \textbf{3.5\,ms}  & 18\,ms    & 46\,ms    \\
+                   & $10^6$ & \textbf{25\,ms}   & 194\,ms   & 3.40\,s   \\
+                   & $5{\times}10^6$ & \textbf{246\,ms} & 1.83\,s & 169\,s \\
+\hline
+\end{tabular}
+\end{table}
+
+The result splits along the structure of the input distribution.
+On uniform-cube data --- the regime where a uniform-grid cell list is
+provably near-optimal --- FastGraph is 5--8$\times$ faster than CLOVER
+hubs across the measured range. On isotropic Gaussian data the two
+methods are within a factor of 2 of each other at every $N$, with
+FastGraph leading at small $N$ and CLOVER's spatio-graph index
+slightly ahead at $N=5\,$M. On the anisotropic HGCAL recHit
+distribution, however, CLOVER's hubs index is roughly two orders of
+magnitude faster than the axis-aligned cell list that FastGraph
+reduces to when $d \leq k_{\text{bin}}$: $5{\times}10^6$ HGCAL hits
+take $1.62\,$s with CLOVER hubs versus $169\,$s with FastGraph at
+$k=40$. The advantage is consistent with CLOVER's design --- a
+Voronoi-style spatial graph reorganises queries around point density
+rather than around a uniform Euclidean grid, and detector recHits
+are extremely concentrated in a small number of regions due to the
+HGCAL granularity and read-out geometry. The axis-aligned cell list
+inherited from prior cell-list work is the right primitive for the
+uniform-distribution regime in which it was developed, but it is not
+the right primitive for $d=3$ on detector hits at this clustering
+level.
+
+\paragraph*{Why this does not contradict the paper's claims.}
+The deployment regime for HGCAL graph-construction GNNs is the
+\emph{learned latent space} of the trained network, not the raw
+3D detector coordinates. Modern dynamic-graph layers used in HEP
+reconstruction operate at $d=4$--$10$ in this latent space: GravNet
+uses $d=4$ in its original formulation~\cite{Qasim2019GravNet} and
+$d \in \{6, 8, 10\}$ in recent HGCAL multi-particle
+variants~\cite{qasim2021multiparticle,bhattacharya2022gnn};
+EdgeConv-derived layers~\cite{wang2019dynamic} and object
+condensation pipelines~\cite{Kieseler2020ObjectCondensation} expose
+similar ranges. At every dimension in this range CLOVER, LBVH-kNN,
+and the RT-core methods are unavailable by construction --- they are
+hardware-locked or implementation-locked to $D=3$ and have no
+defined extension to $d \geq 4$. The $d=3$ slice in
+Table~\ref{tab:clover-d3} therefore corresponds to a regime that is
+neither what FastGraph's PCA-subspace contribution is designed for
+nor what HEP-GNN dynamic graphs are deployed in. We include it
+because it is the only direct head-to-head available against the
+strongest of the 3D-only methods, and because acknowledging it
+honestly avoids the misleading impression that no other GPU method
+can produce a faster $d{=}3$ result on detector data.
+
+A natural reading is that CLOVER is the state-of-the-art for
+\emph{strictly 3D} exact GPU $k$NN on clustered point clouds, and
+FastGraph is the state-of-the-art for exact GPU $k$NN in the
+$d{=}4$--$10$ regime that this paper targets. These regimes do not
+overlap and we make no claim to subsume CLOVER on its native
+3D-clustered turf.
 
 \subsection{Recall evaluation}
 \label{sec:recall}
@@ -1067,12 +1141,16 @@ runs at $d \ge 5$ on this data. The ablation in
 Section~\ref{sec:mbd-ablation} isolates the PCA rotation as the
 load-bearing contribution: comparing each variant at its own
 optimum gives an at-optima ratio of \fgcVanillaBestPCAfactor\
-between PCA-subspace and axis-aligned binning. The 3D-only
-spatial-acceleration methods (CLOVER, LBVH, RT-cores) cannot
-challenge the $d{=}5$--$10$ story by construction, and a direct
-head-to-head against CLOVER at $d{=}3$ shows that FastGraph also
-holds the lead in the one regime where those methods are at all
-applicable to the deployment-relevant anisotropic data.
+between PCA-subspace and axis-aligned binning. The 3D-only spatial-acceleration methods (CLOVER, LBVH, RT-cores)
+are unavailable in the $d \geq 4$ regime by construction. At
+$d{=}3$ on uniform-distribution data FastGraph beats CLOVER by
+5--8$\times$, but on $d{=}3$ HGCAL recHits CLOVER's spatio-graph
+index is roughly two orders of magnitude faster
+(Section~\ref{sec:clover}). We acknowledge this honestly and note
+that the deployment regime for HGCAL graph-construction GNNs is the
+$d{=}4$--$10$ learned latent space, not the raw 3D detector
+coordinates --- so the CLOVER advantage at $d{=}3$ on detector hits
+does not overlap with the regime FastGraph is designed for.
 PCA-subspace binning is the natural extension of classical cell-list
 $k$NN into the moderately low-dimensional learned-latent regimes
 that geometric deep learning operates in, and we expect it to be a
