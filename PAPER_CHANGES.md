@@ -20,18 +20,19 @@ landed as v2; synth Binary A rerun queued as 15702).
 ## A. Macros (top of file)
 
 - [ ] A1. Update `\fgcVanillaBestDeight`: was `135\,s` (dev-binary mbd=6),
-       should be `199.27\,s` (Binary A, axis best within released kernel
-       surface 2-5, at mbd=2).
+       should be `199.37\,s` (Binary A, axis best within released kernel
+       surface 2-5, at mbd=2; median of 3 clean reps).
 - [ ] A2. Update `\fgcVanillaBestPCAfactor`: was `18.8\ensuremath{\times}`,
-       should be `26.6\ensuremath{\times}` (199.27 / 7.48).
+       should be `26.6\ensuremath{\times}` (199.37 / 7.48 = 26.65 → 26.6).
 - [~] A3. Bind `\spdSynthDthree` = `75\ensuremath{\times}` (vs FAISS, d=3 N=1M
        k=40 Gaussian). **WAIT** for synth Binary A rerun (job 15702) so
        the macros come from Binary A, not Binary B.
 - [~] A4. Bind `\spdSynthDfive` = `8.6\ensuremath{\times}` (Binary A, same
        config). WAIT.
 - [~] A5. Remove `\spdSynthDeight`, `\spdSynthDten` — PCA-FGC loses to
-       cuVS BF at d>=6 on Gaussian. Use prose + small table instead.
-       WAIT for Binary A confirmation of the crossover dimension.
+       cuVS BF at d>=6 on Gaussian on **Binary B (current data)**;
+       Binary A is expected to push the crossover to d=7 or d=8
+       (job 15702 will confirm). Use prose + small table instead. WAIT.
 - [ ] A6. Add `\onePassMBDoptPCA` = `7.48\,s` and `\onePassMBDoptAxis` =
        `199.27\,s` for the ablation section.
 
@@ -56,8 +57,10 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## D. Related Work
 
-- [ ] D11. Fix any "FAISS approximate" wording. `IndexFlatL2` is exact.
-       Grep `\b(approximate)\b.*FAISS|FAISS.*approximate`.
+- [x] D11. Fix any "FAISS approximate" wording. **Verified no occurrences
+       in v2.** `grep -E 'approximate.*FAISS|FAISS.*approximate' Paper.tex`
+       returns nothing; FAISS is consistently labeled "exact FAISS-GPU
+       `IndexFlatL2`" at lines 174, 242, 566, 683.
 - [x] D12. `\label{sec:related-work}` added in v1.
 
 ## E. Method (sec:method)
@@ -74,9 +77,18 @@ landed as v2; synth Binary A rerun queued as 15702).
 - [-] F14. Binary-discrepancy footnote NO LONGER NEEDED. Binary A
        ablation matches production headline (7.48 s vs 7.2 s) →
        same binary throughout, no footnote.
-- [ ] F15. Cite the ablation CSVs explicitly: `ablation_binary_crosscheck.csv`
-       (job 15555) and `ablation_max_bin_dims_binA.csv` (jobs 15555
-       + 15578 combined).
+- [ ] F15. Cite the actual ablation CSVs on disk:
+       - `Performance/ablation_binary_crosscheck.csv.contended_15553`
+         (contains the d=8 N=5M k=40 mbd=3 and mbd=5 Binary A cells.
+         The `.contended_15553` suffix marks that the first 3 reps at
+         mbd=3 axis were collected under GPU contention from job 15553;
+         only the last 3 reps at mbd=3 axis are clean. Methods footnote
+         should explain this.)
+       - `Performance/ablation_A_fill_24.csv` (mbd=2 and mbd=4 fill-in
+         cells, Binary A, no contention).
+       - `Performance/ablation_A_cuda13_crosscheck.csv` (the A-cuda13
+         data point of the 2x2 toolchain experiment; informational
+         only, not used in the paper headline).
 - [-] F16. cuVS BF warm-up note. Skipped per Codex (low priority,
        median-of-3 already mitigates).
 
@@ -111,14 +123,21 @@ landed as v2; synth Binary A rerun queued as 15702).
 ## J. Ablation (sec:mbd-ablation) — replace table entirely
 
 - [ ] J23. Replace dev-binary table with Binary A table at mbd in
-       {2,3,4,5}:
+       {2,3,4,5}. **Aggregator is median of clean reps** (n=3 per cell;
+       contended reps at mbd=3 axis filtered out):
 
        | mbd | axis (s) | PCA (s) | PCA speedup |
        |---|---|---|---|
-       | 2 | 199.27 | 11.54 | 17.3x |
-       | 3 | 204.65 | 7.48  | 27.4x ← PCA optimum |
-       | 4 | 353.97 | 11.27 | 31.4x |
-       | 5 | 242.90 | 28.10 | 8.6x  |
+       | 2 | 199.37 | 11.39 | 17.5x |
+       | 3 | 204.65 |  7.48 | 27.4x ← PCA optimum |
+       | 4 | 353.78 | 11.58 | 30.6x |
+       | 5 | 242.90 | 28.10 |  8.6x |
+
+       (Earlier draft of this table mixed mean and median across
+       mbd values. Median throughout is the safer aggregator given
+       n=3 reps and the occasional outlier — e.g., pca mbd=3 has reps
+       [7.17, 8.55, 7.48], where median 7.48 is more representative
+       than mean 7.74.)
 
 - [ ] J24. Drop mbd=6 row. Released kernel ships 2-5 only.
 - [ ] J25. Update at-optima paragraph with the new ratio (26.6x).
