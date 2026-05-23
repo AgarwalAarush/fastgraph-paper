@@ -1279,23 +1279,27 @@ datasets should be aware of the failure mode and the appropriate
 build-path mitigation.
 
 \section{Data and Code Availability Statement}
-The FastGraph library (axis-aligned cell list and core CUDA kernels) is
-publicly available at
-\url{https://github.com/jkiesele/FastGraphCompute}. The PCA-subspace
-extension described in this paper is implemented in a separate development
-branch (\texttt{perf-fixes-pca}) that will be merged and tagged for the
-publication; the exact commit hash will be recorded in the final
-publication. The benchmarking harness, queue files, calibration scripts,
-and the per-backend timing CSVs used to produce every figure in this
-paper live in a companion repository,
-\url{https://github.com/AgarwalAarush/fgc-performance}, and the
-CLOVER head-to-head used a fork of
-\url{https://github.com/ampslab/clover-knn} with local source
+The FastGraph library, including the PCA-subspace extension described in
+this paper, is released at
+\url{https://github.com/AgarwalAarush/FastGraphCompute} (fork of the
+upstream library at \url{https://github.com/jkiesele/FastGraphCompute}).
+The exact source used to collect every headline timing in this paper is
+the \texttt{paper-release} branch at tag \texttt{v1.0-paper}
+(commit \texttt{011d295}), built against the CUDA 12.1 toolchain. The
+released kernel surface covers binning subspace size $k \in \{2, 3, 4, 5\}$;
+the $k{=}6, 7$ kernels exist as an internal ablation
+(Section~\ref{sec:mbd-ablation}) and are intentionally not published, as
+$k{=}7$ hits a per-block register limit and is unsafe to ship.
+The benchmarking harness, queue files, calibration scripts, and the
+per-backend timing CSVs used to produce every figure in this paper live
+in a companion repository,
+\url{https://github.com/AgarwalAarush/fgc-performance}. The CLOVER
+head-to-head used a fork of
+\url{https://github.com/ampslab/clover-knn} at
+\url{https://github.com/AgarwalAarush/clover-knn} with local source
 modifications (\texttt{k\_values} aligned to the paper's $k{=}40$, the
 hardcoded synthetic-N template chain in \texttt{main()} disabled in favor
-of the mesh path, and the build retargeted to \texttt{sm\_80} for A100);
-those modifications will be released alongside the paper as a fork or
-patch series.
+of the mesh path, and the build retargeted to \texttt{sm\_80} for A100).
 
 The detector-derived benchmarks use CMS HGCAL simulation data (recHit
 feature vectors) accessed via an internal collaboration dataset of
