@@ -19,10 +19,10 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## A. Macros (top of file)
 
-- [ ] A1. Update `\fgcVanillaBestDeight`: was `135\,s` (dev-binary mbd=6),
+- [x] A1. Update `\fgcVanillaBestDeight`: was `135\,s` (dev-binary mbd=6),
        should be `199.37\,s` (Binary A, axis best within released kernel
        surface 2-5, at mbd=2; median of 3 clean reps).
-- [ ] A2. Update `\fgcVanillaBestPCAfactor`: was `18.8\ensuremath{\times}`,
+- [x] A2. Update `\fgcVanillaBestPCAfactor`: was `18.8\ensuremath{\times}`,
        should be `26.6\ensuremath{\times}` (199.37 / 7.48 = 26.65 → 26.6).
 - [~] A3. Bind `\spdSynthDthree` = `75\ensuremath{\times}` (vs FAISS, d=3 N=1M
        k=40 Gaussian). **WAIT** for synth Binary A rerun (job 15702) so
@@ -33,26 +33,26 @@ landed as v2; synth Binary A rerun queued as 15702).
        cuVS BF at d>=6 on Gaussian on **Binary B (current data)**;
        Binary A is expected to push the crossover to d=7 or d=8
        (job 15702 will confirm). Use prose + small table instead. WAIT.
-- [ ] A6. Add `\onePassMBDoptPCA` = `7.48\,s` and `\onePassMBDoptAxis` =
+- [x] A6. Add `\onePassMBDoptPCA` = `7.48\,s` and `\onePassMBDoptAxis` =
        `199.27\,s` for the ablation section.
 
 ## B. Title / Abstract
 
-- [ ] B7. Restrict any "faster than every backend" claim to "fastest
+- [x] B7. Restrict any "faster than every backend" claim to "fastest
        exact GPU baseline". GGNN treated as approximate, separately.
        Grep for `every backend`, `faster than every`, `every other`.
 
 ## C. Introduction
 
-- [ ] C8. Add Claim-1 paragraph (~150 words). Why exact kNN matters for
+- [x] C8. Add Claim-1 paragraph (~150 words). Why exact kNN matters for
        HGCAL GNNs. Phrase training-nondeterminism + physics-systematic
        as motivation/risk, not proven pathology (no model study to
        cite).
-- [ ] C9. Add d=4-10 latent-space framing (1-2 sentences). HEP-GNN
+- [x] C9. Add d=4-10 latent-space framing (1-2 sentences). HEP-GNN
        dynamic graphs operate at d=4-10 in learned latent space (cite
        GravNet original + recent HGCAL multi-particle work). Currently
        only buried in sec:clover.
-- [ ] C10. "Fastest exact GPU" restriction wherever it says "fastest"
+- [x] C10. "Fastest exact GPU" restriction wherever it says "fastest"
        (parallel to B7).
 
 ## D. Related Work
@@ -65,7 +65,7 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## E. Method (sec:method)
 
-- [ ] E13. Add PCA short-circuit caveat in Phase 1: when `d <= k_bin`,
+- [x] E13. Add PCA short-circuit caveat in Phase 1: when `d <= k_bin`,
        the wrapper short-circuits to vanilla `binned_select_knn` — PCA
        contributes nothing at d=2,3,4 with default k_bin=3 (and at
        d=2,3 with k_bin=2). The d=2-4 HGCAL wins are inherited from
@@ -77,7 +77,7 @@ landed as v2; synth Binary A rerun queued as 15702).
 - [-] F14. Binary-discrepancy footnote NO LONGER NEEDED. Binary A
        ablation matches production headline (7.48 s vs 7.2 s) →
        same binary throughout, no footnote.
-- [ ] F15. Cite the actual ablation CSVs on disk:
+- [x] F15. Cite the actual ablation CSVs on disk:
        - `Performance/ablation_binary_crosscheck.csv.contended_15553`
          (contains the d=8 N=5M k=40 mbd=3 and mbd=5 Binary A cells.
          The `.contended_15553` suffix marks that the first 3 reps at
@@ -94,14 +94,14 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## G. Headline (sec:headline)
 
-- [ ] G17. Add 1465x callout as one sentence framing the ablation
+- [x] G17. Add 1465x callout as one sentence framing the ablation
        transition. **Label clearly as internal PCA-vs-vanilla** (not
        external baseline). Template: "At small N and high d, vanilla
        axis-aligned falls into its brute-force fallback; e.g., at d=8
        N=10^5 k=40 the PCA path completes in 12\,ms vs.\ vanilla's
        16.93\,s, a 1465x internal speedup that motivates the ablation
        in Section sec:mbd-ablation."
-- [ ] G18. Verify `tab:headline-speedups` caption does not include
+- [x] G18. Verify `tab:headline-speedups` caption does not include
        any "fastest, period" wording.
 
 ## H. Synthetic (sec:synthetic) — mandatory rewrite
@@ -117,12 +117,12 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## I. Memory
 
-- [ ] I22. Verify measurement-caveat paragraph (added in v1) is still
+- [x] I22. Verify measurement-caveat paragraph (added in v1) is still
        accurate and present.
 
 ## J. Ablation (sec:mbd-ablation) — replace table entirely
 
-- [ ] J23. Replace dev-binary table with Binary A table at mbd in
+- [x] J23. Replace dev-binary table with Binary A table at mbd in
        {2,3,4,5}. **Aggregator is median of clean reps** (n=3 per cell;
        contended reps at mbd=3 axis filtered out):
 
@@ -139,20 +139,20 @@ landed as v2; synth Binary A rerun queued as 15702).
        [7.17, 8.55, 7.48], where median 7.48 is more representative
        than mean 7.74.)
 
-- [ ] J24. Drop mbd=6 row. Released kernel ships 2-5 only.
-- [ ] J25. Update at-optima paragraph with the new ratio (26.6x).
-- [ ] J26. Update U-shape narrative: PCA optimum at mbd=3, axis non-
+- [x] J24. Drop mbd=6 row. Released kernel ships 2-5 only.
+- [x] J25. Update at-optima paragraph with the new ratio (26.6x).
+- [x] J26. Update U-shape narrative: PCA optimum at mbd=3, axis non-
        monotonic with minimum at mbd=2 within released range.
 
 ## K. Recall (sec:recall)
 
-- [ ] K27. Add recall table with current CSV numbers, not stale NOTES:
+- [x] K27. Add recall table with current CSV numbers, not stale NOTES:
        - FastGraph: recall_dist = 1.0 across tested configs
        - cuVS/CAGRA: mean ~0.73 at best/high-quality; 0.818 at
          d=3 N=500k k=40 representative cell
        - GGNN: mean ~0.666; catastrophic 0.40-0.57 at d=2-4
        - Neither approximate hits 99% at N >= 500k in tested rows
-- [ ] K28. Delete any stale "FGC mean recall < 1.0" prose — that was
+- [x] K28. Delete any stale "FGC mean recall < 1.0" prose — that was
        the cdist-BLAS measurement artifact, resolved.
 
 ## L. CLOVER (sec:clover)
@@ -162,10 +162,10 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## M. Conclusion
 
-- [ ] M30. Add d=4-10 latent-space framing here too (currently only
+- [x] M30. Add d=4-10 latent-space framing here too (currently only
        in CLOVER section).
-- [ ] M31. Restrict "fastest" wording (parallel to B7).
-- [ ] M32. Soften "data distribution no longer drives speedup" — synth
+- [x] M31. Restrict "fastest" wording (parallel to B7).
+- [x] M32. Soften "data distribution no longer drives speedup" — synth
        and CLOVER prove distribution still matters. Replace with
        something like "FastGraph's PCA-subspace contribution is most
        effective on anisotropic data, where the principal components
@@ -173,7 +173,7 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## N. Data and Code Availability — rewrite
 
-- [ ] N33. Honest version:
+- [x] N33. Honest version:
        - FastGraph public repo: `jkiesele/FastGraphCompute`
        - PCA branch / commit hash: TO BE RELEASED, exact hash once
          pushed. Currently on local `perf-fixes` branch in
@@ -189,7 +189,7 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## O. Limitations
 
-- [ ] O34. Soften "data distribution no longer drives speedup" (same
+- [x] O34. Soften "data distribution no longer drives speedup" (same
        as M32 fix). Add: "PCA's effectiveness depends on data
        anisotropy; isotropic distributions reduce the gain to that
        of axis-aligned binning."
