@@ -177,11 +177,15 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## N. Data and Code Availability — rewrite
 
-- [x] N33. Honest version:
-       - FastGraph public repo: `jkiesele/FastGraphCompute`
-       - PCA branch / commit hash: TO BE RELEASED, exact hash once
-         pushed. Currently on local `perf-fixes` branch in
-         `FastGraphCompute-dev`; untracked remotely.
+- [x] N33. Honest version (refined in v4 post-migration 2026-05-23):
+       - FastGraph paper release: `AgarwalAarush/FastGraphCompute`
+         (fork of `jkiesele/FastGraphCompute`), branch `paper-release`,
+         tag `v1.0-paper` at commit `011d295`. Built with cuda 12.1
+         toolchain (installed at `conda-envs/fgc-fast`).
+       - Released kernel surface: k in {2, 3, 4, 5}. The mbd=6,7
+         extension on local `perf-fixes` (commit `7cb5d1f`) is an
+         ablation that confirmed mbd=7 hits a per-block register limit
+         and is intentionally NOT published.
        - Benchmark scripts + data ledgers:
          `AgarwalAarush/fgc-performance`.
        - CMS HGCAL data: internal, CMS collaboration members only;
