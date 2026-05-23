@@ -24,15 +24,17 @@ landed as v2; synth Binary A rerun queued as 15702).
        surface 2-5, at mbd=2; median of 3 clean reps).
 - [x] A2. Update `\fgcVanillaBestPCAfactor`: was `18.8\ensuremath{\times}`,
        should be `26.6\ensuremath{\times}` (199.37 / 7.48 = 26.65 → 26.6).
-- [~] A3. Bind `\spdSynthDthree` = `75\ensuremath{\times}` (vs FAISS, d=3 N=1M
-       k=40 Gaussian). **WAIT** for synth Binary A rerun (job 15702) so
-       the macros come from Binary A, not Binary B.
-- [~] A4. Bind `\spdSynthDfive` = `8.6\ensuremath{\times}` (Binary A, same
-       config). WAIT.
-- [~] A5. Remove `\spdSynthDeight`, `\spdSynthDten` — PCA-FGC loses to
-       cuVS BF at d>=6 on Gaussian on **Binary B (current data)**;
-       Binary A is expected to push the crossover to d=7 or d=8
-       (job 15702 will confirm). Use prose + small table instead. WAIT.
+- [x] A3. Bound `\spdSynthDthree` = `55\ensuremath{\times}` (PCA-FGC vs
+       cuVS BF, d=3 N=1M k=40 Gaussian, Binary A median of 3 reps).
+       Anchor changed from FAISS to cuVS BF since cuVS BF is the
+       fastest exact GPU baseline on isotropic data and "fastest exact
+       GPU" is the paper's framing.
+- [x] A4. Bound `\spdSynthDfive` = `4.8\ensuremath{\times}` (PCA-FGC vs
+       cuVS BF, Binary A, same config).
+- [x] A5. Removed `\spdSynthDeight` and `\spdSynthDten` — PCA-FGC loses
+       to cuVS BF at d>=7 on Gaussian (crossover at d=7 on Binary A:
+       PCA 7.8s, cuVS BF 6.6s). Replaced with `tab:synth-dim` table at
+       d=3, 5, 7 in sec:synthetic (H21).
 - [x] A6. Add `\onePassMBDoptPCA` = `7.48\,s` and `\onePassMBDoptAxis` =
        `199.27\,s` for the ablation section.
 
@@ -106,14 +108,16 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## H. Synthetic (sec:synthetic) — mandatory rewrite
 
-- [~] H19. Replace current prose with the honest split (PCA-FGC wins
-       at d <= 5 on Gaussian; cuVS BF wins at d >= 6 on isotropic
-       data). WAIT for synth Binary A rerun (15702) so the dimension
-       cutoff and exact ratios are from Binary A.
-- [~] H20. Replace overclaim figures (currently say "FastGraph remains
-       faster than the exact GPU baselines across d=2-10"). WAIT.
-- [~] H21. Add small table at d=3, 5, 8 across the GPU baselines on
-       Gaussian (instead of speedup macros for losing cells). WAIT.
+- [x] H19. Synth prose replaced with honest split: PCA-FGC wins
+       decisively at d=3, 5 (cell-list pruning dominates dense matmul);
+       cuVS BF overtakes at d=7 (dense matmul near-optimal on
+       isotropic data). Frames HGCAL d=6-10 wins as anisotropy result,
+       not generic cell-list miracle. Added `\label{sec:limitations}`
+       for the cross-reference.
+- [x] H20. Old overclaim ("FastGraph remains faster than the exact GPU
+       baselines across d=2-10") removed in v4.
+- [x] H21. Added `tab:synth-dim` table at d=3, 5, 7 across PCA-FGC,
+       cuVS BF, FAISS-GPU, CAGRA-nnd (median ms, Binary A).
 
 ## I. Memory
 
@@ -196,11 +200,20 @@ landed as v2; synth Binary A rerun queued as 15702).
 
 ## P. Mechanical / build blockers
 
-- [ ] P35. Bib merge from `Performance/references.bib`. Verify every
-       `\cite{...}` in `Paper.tex` has a corresponding entry in
-       `Performance-Paper-PCA/references.bib`. The agent-reconstructed
-       bib may have wrong authors for some GPU-RT papers (flagged in
-       the v1 commit message).
+- [x] P35. Bib verification done for the 5 flagged GPU-RT papers
+       (v4). Corrections applied:
+       - `kamel2025clover`: Kamel/Yan/Chester authors corrected
+         (Mahmoud->Victor, Da->Hanxueyu) per ICS '25 paper. DOI added.
+       - `nagarajan2023arkade`: missing author Artem Pelenitsyn added,
+         author order fixed (Mandarapu first per published paper).
+         DOI added.
+       - `evangelou2021rtknn`: entry metadata already correct
+         (Nagarajan/Mandarapu/Kulkarni at ICS '23); citekey is
+         misleading but a stable label, left as-is.
+       - `wald2019rtnn`: entry metadata correct (Yuhao Zhu sole
+         author, PPoPP '22); citekey misleading, left as-is.
+       - `jakob2021optimized`: verified correct (Jakob & Guthe, CGF
+         40(1):124-137, 2021).
 - [ ] P36. Plot filenames (separate plotting track, not paper-text):
        - `gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png` —
          needs PCA-FGC curve + 5 backends

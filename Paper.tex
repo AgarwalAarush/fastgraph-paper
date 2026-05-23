@@ -103,11 +103,12 @@
 \newcommand{\onePassMBDoptPCA}{7.48\,s}
 \newcommand{\onePassMBDoptAxis}{199.37\,s}
 
-% Synthetic GPU baseline data pending (job 15538)
-\newcommand{\spdSynthDthree}{TBD}
-\newcommand{\spdSynthDfive}{TBD}
-\newcommand{\spdSynthDeight}{TBD}
-\newcommand{\spdSynthDten}{TBD}
+% Synthetic GPU speedup macros. Binary A, N=1M k=40, Gaussian N(0,I_d),
+% median of 3 reps. PCA-FGC vs cuVS BF (the fastest exact GPU baseline
+% on isotropic data). PCA-FGC loses at d>=7; we drop those macros and
+% report the crossover in a small table inside sec:synthetic.
+\newcommand{\spdSynthDthree}{55\ensuremath{\times}}
+\newcommand{\spdSynthDfive}{4.8\ensuremath{\times}}
 
 % Sweep / calibration accounting
 \newcommand{\noRegressionCells}{108}
@@ -811,17 +812,52 @@ the pruning structure that was lost in the axis-aligned case.
 \subsection{Controlled synthetic benchmarks}
 \label{sec:synthetic}
 
-On isotropic Gaussian $\mathcal{N}(0, I_d)$ data, the cross-method
-ordering matches what we observe on detector data: FastGraph is the
-fastest GPU method across the dimensional range, with the
-advantage widening above the $d{=}5$ regime transition.
-Figures~\ref{fig:synth_dim}--\ref{fig:synth_size_d8} report the
-synthetic dimensional sweep and two representative dataset-size
-sweeps. The synthetic cross-baseline speedup macros
-(\spdSynthDthree, \spdSynthDfive, \spdSynthDeight, \spdSynthDten)
-will be patched from the matched-allocation calibration sweep on the
-synthetic data once that sweep lands; the figure captions report the
-raw values directly.
+On isotropic Gaussian $\mathcal{N}(0, I_d)$ data, FastGraph wins
+decisively at low dimensions and loses to a dense brute-force GPU
+matmul (cuVS BF) at $d \geq 7$. This is consistent with the
+algorithmic story: the PCA projection contributes nothing on
+isotropic data --- every direction carries equal variance, so the
+principal axes are an arbitrary unitary rotation of the input and
+the wrapper degrades to axis-aligned binning. At low $d$, cell-list
+pruning still dominates the dense $\mathcal{O}(N^2 d)$ matmul of
+the exact GPU baselines, giving FastGraph a $\spdSynthDthree$
+speedup over cuVS BF at $d{=}3$ and a $\spdSynthDfive$ speedup at
+$d{=}5$ (Table~\ref{tab:synth-dim}). As $d$ grows the number of
+neighboring cells grows combinatorially, the binning savings
+collapse, and at $d{=}7$ cuVS BF overtakes FastGraph; from $d{=}7$
+onward, dense matmul on a well-tuned BLAS path is close to optimal
+on isotropic data.
+
+\begin{table}[H]
+\centering
+\caption{Synthetic Gaussian $\mathcal{N}(0, I_d)$ wall-clock at
+$N{=}10^6$, $k{=}40$, in milliseconds (median of 3 reps, Binary A).
+PCA-FGC wins at $d{=}3, 5$; cuVS BF overtakes at $d{=}7$. The
+crossover dimension is the key qualitative result: FastGraph's
+$d \geq 6$ wins on HGCAL detector data
+(Table~\ref{tab:headline-speedups}) are not reproduced here, which
+isolates them to the anisotropic structure of detector features
+rather than a generic property of cell-list binning.}
+\label{tab:synth-dim}
+\begin{tabular}{lrrrr}
+\toprule
+$d$ & PCA-FGC & cuVS BF & FAISS-GPU & CAGRA-nnd \\
+\midrule
+3 &    120 &   6622 & 13029 & 24695 \\
+5 &   1383 &   6628 & 13031 & 24899 \\
+7 &   7782 &   6644 & 13001 & 24942 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The implication for the paper's main claim is that the HGCAL
+detector wins at $d{=}6$--$10$ (Section~\ref{sec:headline}) come from
+PCA picking up anisotropic structure that does not exist in
+isotropic synthetic data, not from cell-list binning alone. We make
+this caveat explicit in Section~\ref{sec:limitations}.
+Figures~\ref{fig:synth_dim}--\ref{fig:synth_size_d8} show the full
+dimensional sweep and two dataset-size scans at $d{=}3$ (PCA-FGC
+regime) and $d{=}8$ (cuVS BF regime) respectively.
 
 \begin{figure}[H]
 \centering
@@ -1187,6 +1223,7 @@ reconstruction, is supported through a separate GPU-resident helper
 kernel described in Appendix~\ref{app:oc}.
 
 \section{Limitations}
+\label{sec:limitations}
 
 \paragraph*{What no longer applies.}
 The $d_{\max}{=}5$ binning cap inherited from axis-aligned cell-list
