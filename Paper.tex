@@ -295,6 +295,7 @@ provided as production wrappers; the latter is described in
 Appendix~\ref{app:oc}.
 
 \section{Related Work}
+\label{sec:related-work}
 
 \paragraph*{Exact GPU $k$NN.}
 Modern GPUs make the inner-loop distance computation of exact $k$NN
@@ -1279,6 +1280,8 @@ datasets should be aware of the failure mode and the appropriate
 build-path mitigation.
 
 \section{Data and Code Availability Statement}
+\begingroup
+\sloppy
 The FastGraph library, including the PCA-subspace extension described in
 this paper, is released at
 \url{https://github.com/AgarwalAarush/FastGraphCompute} (fork of the
@@ -1300,6 +1303,7 @@ head-to-head used a fork of
 modifications (\texttt{k\_values} aligned to the paper's $k{=}40$, the
 hardcoded synthetic-N template chain in \texttt{main()} disabled in favor
 of the mesh path, and the build retargeted to \texttt{sm\_80} for A100).
+\endgroup
 
 The detector-derived benchmarks use CMS HGCAL simulation data (recHit
 feature vectors) accessed via an internal collaboration dataset of

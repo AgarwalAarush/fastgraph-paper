@@ -1,0 +1,18 @@
+# LaTeX build artifacts (Paper.pdf is committed as a release artifact)
+Paper.aux
+Paper.bbl
+Paper.blg
+Paper.fdb_latexmk
+Paper.fls
+Paper.log
+Paper.spl
+Paper.out
+Paper.synctex.gz
+*.toc
+*.lof
+*.lot
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

@@ -201,6 +201,13 @@ landed as v2; synth Binary A rerun queued as 15702).
        as M32 fix). Add: "PCA's effectiveness depends on data
        anisotropy; isotropic distributions reduce the gain to that
        of axis-aligned binning."
+- [ ] O38. Add a systematic study comparing exact vs. approximate kNN backends
+       to the "What still applies" limitations section. Cite \cite{zugner2018adversarial}
+       and \cite{klicpera2019diffusion} to support claims on GNN training/inference
+       sensitivity to edge noise, neighbor selection, and boundary perturbations.
+- [ ] O39. Add a brief mention of hybrid PCA-LBVH (or PCA-BVH) as a promising
+       future direction to handle highly non-uniform data distributions with spatial
+       occupancy skew, which uniform grid partitioning struggles to prune efficiently.
 
 ## P. Mechanical / build blockers
 
