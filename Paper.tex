@@ -1268,6 +1268,27 @@ Among the GPU baselines, approximate methods remain faster than
 FastGraph at default low-recall settings; FastGraph is the right
 choice only when exact graph topology is required.
 
+\paragraph*{Why exactness matters for the downstream GNN.}
+The case for an exact $k$NN backend over a recall-tuned approximate
+one is not a raw-recall argument but a sensitivity-of-downstream
+argument. Adversarial-robustness studies of graph neural networks
+show that node predictions can shift substantially under small,
+structure-preserving edge perturbations to the input
+graph~\cite{zugner2018adversarial}; the same literature also
+documents that systematic reweighting of the neighbourhood---e.g.,
+replacing direct neighbours with a diffusion-smoothed neighbour
+set---measurably alters downstream accuracy~\cite{klicpera2019diffusion}.
+The neighbour-set mismatches injected by an approximate $k$NN are
+exactly this kind of perturbation, distributed non-uniformly across
+the event and dependent on the build-side index hyperparameters.
+We do not claim the HGCAL reconstruction targets are pathologically
+sensitive to approximate-$k$NN edge noise---that would require a
+dedicated model study we have not done---but the safer default for
+a physics application that demands reproducible, systematics-controlled
+inference is the exact graph, particularly when an exact backend is
+competitive on wall-clock in the relevant operating regime
+(Section~\ref{sec:headline}).
+
 \paragraph*{CAGRA on heterogeneous data.}
 CAGRA's default IVF-PQ build path fails on HGCAL data at $d \ge 5$
 (Section~\ref{sec:expsetup}); the NN-Descent fallback succeeds
