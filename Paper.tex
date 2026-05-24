@@ -887,38 +887,65 @@ regime) and $d{=}8$ (cuVS BF regime) respectively.
 
 \begin{figure}[H]
 \centering
-  \includegraphics[width=0.85\textwidth]{memory_footprint.png}
-  \caption{Resident GPU memory (as reported by NVML) for each backend
-  across dataset sizes. FastGraph's resident-memory number is inflated
-  by output tensors retained in Python and autograd-saved
-  intermediates; see the measurement caveat below.}
+  \includegraphics[width=0.95\textwidth]{memory_footprint.png}
+  \caption{GPU memory footprint per backend at $d{=}3$, $k{=}40$,
+  measured by a 100\,Hz NVML polling thread that captures the true
+  peak during the call. \emph{Left:} workspace, defined as
+  $\text{peak} - (N{\times}k)$ output bytes, i.e.\ everything the
+  algorithm allocates beyond the $(\text{idx},\text{dist})$ output
+  tensors. This is the apples-to-apples algorithm-only number.
+  \emph{Right:} end-state, the resident NVML reading after the call
+  synchronises and the caller still holds the output. This is the
+  ``can I fit this in 80\,GB'' number.}
   \label{fig:memory_footprint}
 \end{figure}
 
-FastGraph allocates bin assignments, bin boundaries, the projected
-coordinate array, and intermediate sort/remap buffers; together with
-the $N \times K$ output tensors that are kept alive by the calling
-PyTorch graph for the backward pass, the resident memory reported
-by NVML is larger than that of FAISS or GGNN.
+\paragraph*{What the numbers say.}
+On workspace, FastGraph allocates noticeably more than the dense GPU
+baselines: at $N{=}5$\,M, $d{=}3$, $k{=}40$ FastGraph (both
+axis-aligned and PCA-subspace) needs about $4.5$\,GB of workspace
+versus $1.4$\,GB for FAISS-GPU and CAGRA-nn-descent, $1.4$\,GB for
+GGNN, and only $\sim 80$\,MB for cuVS BF (whose workspace is a
+single tiled \texttt{gemm} scratchpad and the output is most of its
+end-state). The workspace cost is structural: bin assignments, bin
+boundaries, the projected coordinate array, the sort/remap
+intermediates, and the autograd-saved tensors that materialise the
+backward pass through the selected distances. We measured an
+inference-path wrapper (\texttt{torch.no\_grad}) and found the peak
+workspace indistinguishable from training at $N \geq 5\times 10^{5}$,
+which tells us the dominant cost is transient kernel scratch rather
+than autograd retention; this also matches the FGC-reported
+\texttt{torch.cuda.max\_memory\_allocated()} sanity-check column in
+the v2 benchmark CSV. On end-state, the gap closes: FastGraph holds
+$\sim 6.8$\,GB versus $1.6$--$2.9$\,GB for the others, because
+the $N{\times}k$ output dominates resident memory once allocator
+caches are released and the gap is now only roughly $3\times$
+rather than $50\times$.
 
-\paragraph*{Measurement caveat.}
-The NVML reading we report for FastGraph is inflated by two effects
-that are not visible to FAISS or GGNN in the same harness. First,
-FastGraph returns the $N \times K$ neighbor index and squared-distance
-tensors to Python, where they are retained for backward; the
-benchmark harness for FAISS releases the equivalent tensors before
-the NVML snapshot, and the GGNN runner discards them entirely.
-Second, the FastGraph kernel's
-sort/remap/scatter pipeline allocates intermediate $N \times K$
-tensors, and the autograd graph saves additional tensors for the
-backward pass through the selected distances. The algorithmic
-minimum is smaller than the reported footprint; the current
-implementation's choices are appropriate for training use, but the
-measurement should be read as ``training-mode footprint'' rather
-than ``inference-only footprint.'' A direct
-inference-only comparison would require either disabling autograd in
-all backends or restoring the kept-alive output tensors uniformly
-across them; we leave that change for a future revision.
+\paragraph*{Recall caveat for the approximate backends.}
+The plot reports each backend at the configuration used elsewhere in
+this paper. FAISS-GPU \texttt{IndexFlatL2} is exact; cuVS BF is
+exact. CAGRA-nn-descent and GGNN are approximate at their default
+quality settings; their memory advantage is partly inherited from
+running at lower effective recall (see
+Section~\ref{sec:recall}). A matched-recall memory comparison would
+require either raising their quality parameters until recall hits a
+target or downsampling their internal graphs, neither of which has a
+canonical setting; we therefore report the memory each backend uses
+\emph{as benchmarked}, with the understanding that the approximate
+backends are not bound to FastGraph's exact-recall constraint.
+
+\paragraph*{Measurement notes.}
+The v1 of this benchmark sampled NVML once after
+\texttt{cuda.synchronize()}, which captured the end-state only and
+mixed in asymmetric allocator-cache effects across PyTorch
+(\texttt{caching allocator}), FAISS (own pool), and CuPy/RMM. The v2
+instrument (\texttt{memory\_instrument.py}) runs a background NVML
+poller at $\sim 100$\,Hz, records the true peak observed during the
+timed region, and subtracts a per-backend output size to derive the
+workspace number; the source CSV \texttt{memory\_usage\_v2.csv}
+records both numbers per cell. The end-state number is the closest
+analogue to v1; the workspace number is the new comparison.
 
 \subsection{Ablation: choice of binning dimensionality $k$}
 \label{sec:mbd-ablation}
