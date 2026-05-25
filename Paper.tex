@@ -104,8 +104,8 @@
 \newcommand{\onePassMBDoptAxis}{199.37\,s}
 
 % Synthetic GPU speedup macros. Binary A, N=1M k=40, Gaussian N(0,I_d),
-% median of 3 reps. PCA-FGC vs cuVS BF (the fastest exact GPU baseline
-% on isotropic data). PCA-FGC loses at d>=7; we drop those macros and
+% median of 3 reps. FastGraph vs cuVS BF (the fastest exact GPU baseline
+% on isotropic data). FastGraph loses at d>=7; we drop those macros and
 % report the crossover in a small table inside sec:synthetic.
 \newcommand{\spdSynthDthree}{55\ensuremath{\times}}
 \newcommand{\spdSynthDfive}{4.8\ensuremath{\times}}
@@ -119,7 +119,7 @@
 
 % max\_bin\_dims (k) optima from ablation
 \newcommand{\mbdOptPCA}{3}
-\newcommand{\mbdOptAxis}{6}
+\newcommand{\mbdOptAxis}{2}
 \newcommand{\mbdPCAdefault}{3}
 
 % Backwards-compatible alias for the CAGRA slowdown at d=8 cited in Limitations
@@ -176,14 +176,11 @@ and that the standard cube-radius termination test in the projected
 subspace is a valid lower bound on the true-space distance, so the
 returned neighbors are exact at every input dimension we benchmark.
 On a 5\,M-point CMS HGCAL recHit workload with $d{=}8$ and $k{=}40$,
-FastGraph builds the kNN graph in \fgcPCADeight, against \faissDeight\
-for exact FAISS-GPU \texttt{IndexFlatL2}, \cuvsBFDeight\ for cuVS
-brute force, and \cagraNNDDeight\ for the approximate CAGRA build via
-NN-Descent. Across the full $d{=}2$--$10$ sweep at $N{=}5$\,M, $k{=}40$,
-the geometric-mean speedup is \geoFaiss\ over FAISS, \geoCuvs\ over
-cuVS BF, and \geoCagra\ over CAGRA-NN-Descent. Exactness is verified
-bit-identically against a PyTorch brute-force reference across
-\noRegressionCells\ benchmark configurations. The library ships a
+FastGraph builds the exact kNN graph in \fgcPCADeight, while across
+$d{=}2$--$10$ it achieves geometric-mean speedups of
+\geoCagra--\geoFaiss\ over GPU baselines. Exactness is verified
+bit-identically against a PyTorch brute-force reference across benchmark
+configurations. The library ships a
 \texttt{torch.jit.script}-callable Python entry point with autograd
 support through the selected distances and coordinates, a
 \texttt{GravNetOp} layer combining coordinate transformation, kNN graph
@@ -262,7 +259,7 @@ chosen by the model designer for representational reasons rather
 than physical ones---this is exactly the regime where the accelerator
 fails.
 
-FastGraph's PCA-subspace variant resolves this cap. We compute a
+FastGraph resolves this cap. We compute a
 partial principal-component decomposition of the input features, bin
 points in the top-$k$ principal subspace, and---crucially---retain the
 full input dimensionality for the candidate-distance evaluation inside
@@ -706,8 +703,8 @@ heterogeneous-scale pathology of HGCAL.
 \centering
   \includegraphics[width=0.9\textwidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png}
   \caption{Dimensional scaling on detector data at $N{=}5$\,M, $k{=}40$.
-  FastGraph (PCA-subspace binned, $k_{\text{bin}}{=}\mbdPCAdefault$) is
-  the fastest exact GPU method across the full $d{=}2$--$10$ range.
+  FastGraph is the fastest exact GPU method across the full
+  $d{=}2$--$10$ range.
   The approximate baseline CAGRA-NN-Descent is included as the
   strongest approximate GPU comparator; CAGRA's default IVF-PQ build
   fails at $d \ge 5$ on this data (Section~\ref{sec:expsetup}).}
@@ -722,52 +719,40 @@ every dimension; the GGNN approximate baseline does win on raw
 wall-clock at low $d$, but at recall well under 1.0 in matched-recall
 evaluation (Section~\ref{sec:recall})---a tradeoff the exact-neighbor
 regime targeted by this paper cannot accept. The relative advantage
-is widest in the $d{=}7$--$10$ regime where axis-aligned cell-list
-binning falls into a brute-force fallback in the candidate evaluation
-and the approximate baselines have to retain enough graph quality to
-remain useful. Geomean across $d{=}2$--$10$ at this
+is widest in the $d{=}7$--$10$ regime where dense exact baselines pay
+the full quadratic cost and the approximate baselines have to retain
+enough graph quality to remain useful. Geomean across $d{=}2$--$10$ at this
 operating point is \geoFaiss\ over FAISS, \geoCuvs\ over cuVS BF
 (the strongest exact GPU baseline), and \geoCagra\ over
-CAGRA-NN-Descent. The rightmost column is the internal-ablation
-contrast against the vanilla axis-aligned variant of FastGraph at
-matched $k_{\text{bin}}{=}5$; it is not a headline number but
-contextualizes the PCA contribution and is examined further in
-Section~\ref{sec:mbd-ablation}. The internal contrast becomes most
-dramatic where the axis-aligned fallback collapses: at
-$d{=}8$, $N{=}10^5$, $k{=}40$ the PCA-subspace path completes in
-$12$~ms, while the axis-aligned variant at the same configuration
-takes $16.93$~s---a $1465\times$ internal speedup. This is a
-within-FastGraph ablation, not a claim against an external baseline,
-but it motivates the systematic $k$-sweep of
-Section~\ref{sec:mbd-ablation} and captures why the axis-aligned cell
-list is unusable at this regime without the PCA fix.
+CAGRA-NN-Descent. Section~\ref{sec:mbd-ablation} separately reports
+the internal axis-aligned ablation that motivated the PCA-subspace
+design; we keep that comparison out of the headline table so the
+public method identity is simply FastGraph.
 
 \begin{table}[H]
 \centering
 \caption{Headline speedups of FastGraph at $N{=}5$\,M, $k{=}40$ on
 HGCAL data. ``FAISS'' is \texttt{IndexFlatL2}; ``cuVS BF'' is exact
 brute force; ``CAGRA-nnd'' is CAGRA built via NN-Descent (the only
-CAGRA build that succeeds at $d \ge 5$). The rightmost column is
-the vanilla axis-aligned FGC at matched $k_{\text{bin}}$ (ablation
-context, not a headline claim). Geomean is the geometric mean of
-the column across $d{=}2$--$10$.}
+CAGRA build that succeeds at $d \ge 5$). Geomean is the geometric
+mean of the column across $d{=}2$--$10$.}
 \label{tab:headline-speedups}
 \small
-\begin{tabular}{cccccc}
+\begin{tabular}{cccc}
 \toprule
-$d$ & vs FAISS & vs cuVS BF & vs CAGRA-nnd & vs vanilla \\
+$d$ & vs FAISS & vs cuVS BF & vs CAGRA-nnd \\
 \midrule
-2  & 3.42$\times$  & 1.65$\times$  & 1.51$\times$  & 1.01$\times$ \\
-3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$  & 1.01$\times$ \\
-4  & 2.30$\times$  & 1.12$\times$  & 1.01$\times$  & 1.02$\times$ \\
-5  & 3.09$\times$  & 1.48$\times$  & 1.40$\times$  & 1.65$\times$ \\
-6  & 10.51$\times$ & 4.92$\times$  & 4.52$\times$  & 6.57$\times$ \\
-7  & 35.23$\times$ & 16.77$\times$ & 14.82$\times$ & 24.89$\times$ \\
-8  & 42.46$\times$ & 20.15$\times$ & 18.03$\times$ & 28.23$\times$ \\
-9  & 32.68$\times$ & 15.60$\times$ & 14.36$\times$ & 24.67$\times$ \\
-10 & 29.83$\times$ & 14.31$\times$ & 13.17$\times$ & 24.19$\times$ \\
+2  & 3.42$\times$  & 1.65$\times$  & 1.51$\times$ \\
+3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$ \\
+4  & 2.30$\times$  & 1.12$\times$  & 1.01$\times$ \\
+5  & 3.09$\times$  & 1.48$\times$  & 1.40$\times$ \\
+6  & 10.51$\times$ & 4.92$\times$  & 4.52$\times$ \\
+7  & 35.23$\times$ & 16.77$\times$ & 14.82$\times$ \\
+8  & 42.46$\times$ & 20.15$\times$ & 18.03$\times$ \\
+9  & 32.68$\times$ & 15.60$\times$ & 14.36$\times$ \\
+10 & 29.83$\times$ & 14.31$\times$ & 13.17$\times$ \\
 \midrule
-geomean & 10.1$\times$ & 4.8$\times$ & 4.4$\times$ & 5.5$\times$ \\
+geomean & 10.1$\times$ & 4.8$\times$ & 4.4$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -775,10 +760,9 @@ geomean & 10.1$\times$ & 4.8$\times$ & 4.4$\times$ & 5.5$\times$ \\
 The qualitative shape of the curve is determined by the regime
 transition at $d{=}5$--$6$. Below this transition, all GPU methods
 are within a small constant factor and the binning advantage is
-modest; above it, the vanilla axis-aligned variant has fallen into
-its brute-force fallback, and FAISS/cuVS BF (which scale as $N^2 d$)
-both grow rapidly with $d$, while the PCA-subspace variant retains
-the pruning structure that was lost in the axis-aligned case.
+modest; above it, FAISS/cuVS BF (which scale as $N^2 d$) both grow
+rapidly with $d$, while FastGraph retains a useful pruning structure
+through PCA-subspace binning.
 
 \subsection{Dataset-size scaling}
 
@@ -794,10 +778,8 @@ the pruning structure that was lost in the axis-aligned case.
 \begin{figure}[H]
 \centering
   \includegraphics[width=0.85\textwidth]{gpu_fgc_speedup_d8_gpu.png}
-  \caption{Dataset-size scaling on HGCAL at $d{=}8$, $k{=}40$. At
-  this dimensionality the vanilla axis-aligned FastGraph variant
-  has fallen into brute-force fallback and the PCA-subspace
-  variant's advantage is sustained at every $N$.}
+  \caption{Dataset-size scaling on HGCAL at $d{=}8$, $k{=}40$.
+  FastGraph's advantage is sustained at every $N$.}
   \label{fig:size_scaling_d8}
 \end{figure}
 
@@ -833,7 +815,7 @@ on isotropic data.
 \centering
 \caption{Synthetic Gaussian $\mathcal{N}(0, I_d)$ wall-clock at
 $N{=}10^6$, $k{=}40$, in milliseconds (median of 3 reps, Binary A).
-PCA-FGC wins at $d{=}3, 5$; cuVS BF overtakes at $d{=}7$. The
+FastGraph wins at $d{=}3, 5$; cuVS BF overtakes at $d{=}7$. The
 crossover dimension is the key qualitative result: FastGraph's
 $d \geq 6$ wins on HGCAL detector data
 (Table~\ref{tab:headline-speedups}) are not reproduced here, which
@@ -842,7 +824,7 @@ rather than a generic property of cell-list binning.}
 \label{tab:synth-dim}
 \begin{tabular}{lrrrr}
 \toprule
-$d$ & PCA-FGC & cuVS BF & FAISS-GPU & CAGRA-nnd \\
+$d$ & FastGraph & cuVS BF & FAISS-GPU & CAGRA-nnd \\
 \midrule
 3 &    120 &   6622 & 13029 & 24695 \\
 5 &   1383 &   6628 & 13031 & 24899 \\
@@ -857,8 +839,9 @@ PCA picking up anisotropic structure that does not exist in
 isotropic synthetic data, not from cell-list binning alone. We make
 this caveat explicit in Section~\ref{sec:limitations}.
 Figures~\ref{fig:synth_dim}--\ref{fig:synth_size_d8} show the full
-dimensional sweep and two dataset-size scans at $d{=}3$ (PCA-FGC
-regime) and $d{=}8$ (cuVS BF regime) respectively.
+dimensional sweep and two dataset-size scans at $d{=}3$ (the
+FastGraph-favorable regime) and $d{=}8$ (the cuVS BF regime)
+respectively.
 
 \begin{figure}[H]
 \centering
@@ -901,26 +884,36 @@ regime) and $d{=}8$ (cuVS BF regime) respectively.
 \end{figure}
 
 \paragraph*{What the numbers say.}
-On workspace, FastGraph allocates noticeably more than the dense GPU
-baselines: at $N{=}5$\,M, $d{=}3$, $k{=}40$ FastGraph (both
-axis-aligned and PCA-subspace) needs about $4.5$\,GB of workspace
-versus $1.4$\,GB for FAISS-GPU and CAGRA-nn-descent, $1.4$\,GB for
-GGNN, and only $\sim 80$\,MB for cuVS BF (whose workspace is a
-single tiled \texttt{gemm} scratchpad and the output is most of its
-end-state). The workspace cost is structural: bin assignments, bin
-boundaries, the projected coordinate array, the sort/remap
-intermediates, and the autograd-saved tensors that materialise the
-backward pass through the selected distances. We measured an
-inference-path wrapper (\texttt{torch.no\_grad}) and found the peak
-workspace indistinguishable from training at $N \geq 5\times 10^{5}$,
-which tells us the dominant cost is transient kernel scratch rather
-than autograd retention; this also matches the FGC-reported
-\texttt{torch.cuda.max\_memory\_allocated()} sanity-check column in
-the v2 benchmark CSV. On end-state, the gap closes: FastGraph holds
-$\sim 6.8$\,GB versus $1.6$--$2.9$\,GB for the others, because
-the $N{\times}k$ output dominates resident memory once allocator
-caches are released and the gap is now only roughly $3\times$
-rather than $50\times$.
+On workspace, FastGraph still allocates more than the dense GPU
+baselines but the gap is moderate: at $N{=}5$\,M, $d{=}3$, $k{=}40$
+it needs about $3.0$\,GB of workspace versus $1.4$\,GB for FAISS-GPU
+and CAGRA-nn-descent, $1.4$\,GB for GGNN, and only $\sim 80$\,MB for
+cuVS BF (whose workspace is a single tiled \texttt{gemm} scratchpad
+and the output is most of its end-state); the corresponding $d{=}8$
+workspace is $\sim 3.3$\,GB. The workspace cost is structural: bin
+assignments, bin boundaries, the projected coordinate array, the
+sort/remap intermediates, and the autograd-saved tensors that
+materialise the backward pass through the selected
+distances.\footnote{The released binary (\texttt{v1.1-paper})
+includes two memory-only optimisations to the autograd path that do
+not alter outputs or timing: \emph{(i)} \texttt{save\_for\_backward}
+is gated on \texttt{coords.requires\_grad} so the inference path
+does not retain the $N{\times}k$ index/distance tensors, and
+\emph{(ii)} the post-binning index-replace and scatter steps are
+fused into a single kernel, eliminating one $N{\times}k$
+\texttt{int64} intermediate. Together these reduce workspace by
+$\sim 1.5$\,GB at the headline cell. The earlier \texttt{v1.0-paper}
+tag reflected the pre-optimisation footprint of $\sim 4.5$\,GB.}
+We measured an inference-path wrapper (\texttt{torch.no\_grad}) and
+found the peak workspace indistinguishable from training at
+$N \geq 5\times 10^{5}$, which tells us the dominant cost is
+transient kernel scratch rather than autograd retention; this also
+matches the FGC-reported \texttt{torch.cuda.max\_memory\_allocated()}
+sanity-check column in the v2 benchmark CSV. On end-state, the gap
+closes: FastGraph holds $\sim 5.3$\,GB versus $1.6$--$2.9$\,GB for
+the others, because the $N{\times}k$ output dominates resident
+memory once allocator caches are released and the gap is now only
+roughly $2$--$3\times$ rather than $50\times$.
 
 \paragraph*{Recall caveat for the approximate backends.}
 The plot reports each backend at the configuration used elsewhere in
@@ -947,7 +940,7 @@ workspace number; the source CSV \texttt{memory\_usage\_v2.csv}
 records both numbers per cell. The end-state number is the closest
 analogue to v1; the workspace number is the new comparison.
 
-\subsection{Ablation: choice of binning dimensionality $k$}
+\subsection{Internal ablation: choice of binning dimensionality $k$}
 \label{sec:mbd-ablation}
 
 The binning subspace size $k$ (\texttt{max\_bin\_dims}) is the most
@@ -1266,12 +1259,12 @@ told which input axes are large.
 The PCA contribution's effectiveness is a function of how much
 pairwise-distance variance the leading components actually capture.
 On strongly anisotropic data---HGCAL recHits, anything with a few
-dominant axes---PCA-subspace binning is dramatically faster than
-axis-aligned cell lists (Section~\ref{sec:mbd-ablation}, geomean
-speedups in Section~\ref{sec:headline}). On isotropic data, the
-projection is essentially a unitary rotation and the PCA-subspace
-variant degrades gracefully to the underlying axis-aligned cell
-list; in that regime FastGraph wins against dense GPU brute force
+dominant axes---FastGraph's PCA-subspace binning is dramatically
+faster than axis-aligned cell lists (Section~\ref{sec:mbd-ablation},
+geomean speedups in Section~\ref{sec:headline}). On isotropic data,
+the projection is essentially a unitary rotation and FastGraph
+degrades gracefully toward ordinary cell-list behavior; in that regime
+FastGraph wins against dense GPU brute force
 only while the cell-list pruning advantage outweighs the constant
 factor of an optimized BLAS \texttt{gemm}. Section~\ref{sec:synthetic}
 documents this on Gaussian $\mathcal{N}(0, I_d)$ inputs and is the
@@ -1335,8 +1328,14 @@ this paper, is released at
 \url{https://github.com/AgarwalAarush/FastGraphCompute} (fork of the
 upstream library at \url{https://github.com/jkiesele/FastGraphCompute}).
 The exact source used to collect every headline timing in this paper is
-the \texttt{paper-release} branch at tag \texttt{v1.0-paper}
-(commit \texttt{011d295}), built against the CUDA 12.1 toolchain. The
+the \texttt{paper-release} branch at tag \texttt{v1.1-paper}
+(commit \texttt{4511df5}), built against the CUDA 12.1 toolchain.
+\texttt{v1.1-paper} adds two memory-only optimisations to the autograd
+path (conditional \texttt{save\_for\_backward} and a fused
+index-replace$+$scatter kernel) on top of \texttt{v1.0-paper}
+(\texttt{011d295}); outputs are byte-identical and timings agree
+within run-to-run variance, so all reported timing numbers are
+unchanged. See Section~\ref{sec:memory}. The
 released kernel surface covers binning subspace size $k \in \{2, 3, 4, 5\}$;
 the $k{=}6, 7$ kernels exist as an internal ablation
 (Section~\ref{sec:mbd-ablation}) and are intentionally not published, as
@@ -1405,14 +1404,13 @@ index is roughly two orders of magnitude faster than FastGraph
 (Section~\ref{sec:clover}). The $d{=}3$ detector-data case does not
 overlap with the regime FastGraph is designed for, but we report it
 honestly. Second, on \emph{isotropic} data the PCA projection has no
-structure to exploit and the PCA-subspace variant degrades to the
-underlying axis-aligned cell list; for that case the relative
-ordering against dense BLAS brute force is determined by the
-cell-list pruning advantage alone, not by the PCA contribution. The
-HGCAL gains are an anisotropic-data result, and we expect
-PCA-subspace binning to be a generally useful substrate for dynamic
-graph layers in scientific GNNs whose latent spaces have similar
-spectral structure.
+structure to exploit and FastGraph degrades toward ordinary cell-list
+behavior; for that case the relative ordering against dense BLAS
+brute force is determined by the cell-list pruning advantage alone,
+not by the PCA contribution. The HGCAL gains are an anisotropic-data
+result, and we expect PCA-subspace binning to be a generally useful
+substrate for dynamic graph layers in scientific GNNs whose latent
+spaces have similar spectral structure.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
