@@ -21,6 +21,14 @@
 
 \graphicspath{{media/}{images/}}     % organize your images and other figures under media/ folder
 
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+
 \lstset{
     basicstyle=\ttfamily\small,
     keywordstyle=\color{blue}\bfseries,
@@ -665,7 +673,7 @@ heterogeneous-scale pathology of HGCAL.
 \subsection{Headline: dimensional scaling on detector data}
 \label{sec:headline}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.9\textwidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png}
   \caption{Dimensional scaling on detector data at $N{=}5$\,M, $k{=}40$.
@@ -696,7 +704,7 @@ the internal axis-aligned ablation that motivated the PCA-subspace
 design; we keep that comparison out of the headline table so the
 public method identity is simply FastGraph.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Headline speedups of FastGraph at $N{=}5$\,M, $k{=}40$ on
 HGCAL data. ``FAISS'' is \texttt{IndexFlatL2}; ``cuVS BF'' is exact
@@ -733,7 +741,7 @@ through PCA-subspace binning.
 
 \subsection{Dataset-size scaling}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \begin{minipage}{0.49\textwidth}
   \centering
@@ -756,7 +764,7 @@ trend is not an artifact of the single $k{=}40$ operating point.
 Across $k\in\{10,40,100\}$, the low-dimensional constant-factor
 regime and the larger $d{\geq}6$ speedups remain visible.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.95\textwidth]{gpu_fgc_k_comparison_1M_d2-10_all_algorithms.png}
   \caption{Speedup at $N{=}1$\,M for $k\in\{10, 40, 100\}$ across
@@ -783,7 +791,7 @@ neighboring cells grows combinatorially, the binning savings
 collapse, and dense matmul on a well-tuned BLAS path is close to
 optimal on isotropic data.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{FastGraph speedup over GPU baselines on synthetic Gaussian
 $\mathcal{N}(0, I_d)$ data at $N{=}10^6$, $k{=}40$ (median of
@@ -810,7 +818,7 @@ isotropic synthetic data, not from cell-list binning alone.
 Figure~\ref{fig:synth_summary} shows the full dimensional sweep and two
 dataset-size scans at $d{=}3$ and $d{=}8$.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.95\textwidth]{synth_summary_gpu.png}
   \caption{Controlled synthetic Gaussian benchmarks. Top:
@@ -822,7 +830,7 @@ dataset-size scans at $d{=}3$ and $d{=}8$.
 \subsection{Memory footprint}
 \label{sec:memory}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.95\textwidth]{memory_footprint.png}
   \caption{GPU memory footprint per backend at $d{=}3$, $k{=}40$,
@@ -881,7 +889,7 @@ Table~\ref{tab:mbd-ablation} compares this choice with the
 axis-aligned cell list over the released kernel surface
 $k \in \{2,3,4,5\}$, using medians over three repetitions.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Effect of the binning subspace size $k$ on FastGraph
 wall-clock at $d{=}8$, $N{=}5$\,M, $k_{\text{nn}}{=}40$, median of
@@ -931,7 +939,7 @@ paper's main claim: CLOVER is restricted to raw 3D point clouds,
 whereas FastGraph targets exact $k$NN in learned latent spaces with
 $d{=}4$--$10$.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.9\textwidth]{clover_headtohead_d3.png}
   \caption{FastGraph vs CLOVER at $d{=}3$, $k{=}40$, across three
@@ -974,28 +982,17 @@ defined extension to $d \geq 4$.
 \subsection{Recall evaluation}
 \label{sec:recall}
 
-To verify FastGraph's exactness we compute distance-based recall
-against a brute-force ground truth on HGCAL data up to
-$N{=}5\times 10^5$. Standard set-match recall is inappropriate here
-because the HGCAL recHit data contains many spatially coincident
-points (multiple events depositing into the same calorimeter cell),
-which makes any permutation among tied neighbors equally valid.
-\emph{Distance-based recall}---a predicted neighbor counts as
-correct if its squared distance is at most the $k$-th
-ground-truth distance, plus a small tolerance for floating-point
-roundoff---is the appropriate metric. Both the reference and the
-evaluation use element-wise squared $\ell_2$,
-$\sum_i (a_i - b_i)^2$, rather than the BLAS expansion
-$\|a\|^2 + \|b\|^2 - 2 a \cdot b$. The BLAS form catastrophically
-cancels when two coincident hits have small true distance relative
-to their norms---exactly the HGCAL coincident-hit case---while the
-element-wise form does not, and matches the distance kernel
-FastGraph uses internally. FAISS's \texttt{IndexFlatL2} uses the
-BLAS form, so when we evaluate FAISS we compare against a
-BLAS-consistent brute-force reference; this kernel-matched protocol
-ensures that each exact method recovers full recall by construction
-and that any deficit observed in an approximate method reflects a
-genuine search approximation rather than a numerical mismatch.
+To verify FastGraph's exactness we compare against a brute-force
+reference on HGCAL data up to $N{=}5\times 10^5$. Because many
+recHits are spatially coincident, neighbor indices are not unique;
+we therefore use \emph{distance-based recall}, counting a predicted
+neighbor as correct when its squared distance is no larger than the
+$k$-th reference distance plus a small tolerance. FastGraph and its
+reference use element-wise squared $\ell_2$ distances, which avoid
+the cancellation that can affect coincident-hit cases under the BLAS
+expansion. FAISS's \texttt{IndexFlatL2} is evaluated against a
+BLAS-consistent reference so exact methods are not penalized for
+kernel-specific floating-point differences.
 
 Under this metric FastGraph achieves recall $= 1.0$ across every
 tested configuration ($d \in \{2,\ldots,10\}$, $k_{\text{nn}} \in
@@ -1003,7 +1000,7 @@ tested configuration ($d \in \{2,\ldots,10\}$, $k_{\text{nn}} \in
 baselines, even at their highest-quality parameter settings, do not
 reach exact recall. Table~\ref{tab:recall} summarises.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Distance-based recall on HGCAL data at the highest-quality
 parameter setting for each backend (\texttt{itopk\_size}$=512$ for
@@ -1025,24 +1022,16 @@ GGNN                & $0.666$ & $0.410$ & $0.027$ \\
 \end{tabular}
 \end{table}
 
-Two features of this table matter beyond the headline numbers. First,
-neither approximate method achieves $99\%$ distance-based recall at
-$N \ge 5 \times 10^5$ in any tested cell---tuning them to a higher
-recall target by increasing search-quality knobs increases their
-wall-clock above FastGraph's, eliminating the speed advantage they
-hold at default low-recall settings. This is the matched-recall sweep
-that underlies the \spdHGCALcagradeight\ CAGRA-vs-FastGraph headline
-figure. Second, GGNN's recall at the highest-quality
-$\tau_{\text{query}}=0.8$ collapses to $\sim 0.03$ at $d{=}5$ before
-recovering at $d \ge 6$: an architectural artifact of GGNN's
-graph-traversal heuristics on detector-style data at the dimension
-where the implicit cluster structure crosses an internal threshold.
-A cell-by-cell analysis of this GGNN transition is beyond the scope
-of the present benchmark. We report the representative cell separately
-because the mean recall is not a reliable summary for individual
-deployment points in this regime.
+Two points are most relevant. First, neither approximate method
+achieves $99\%$ distance-based recall at $N \ge 5 \times 10^5$ in
+the tested cells; raising their search-quality settings to close
+this gap removes their wall-clock advantage over FastGraph. Second,
+GGNN's highest-quality setting drops sharply at $d{=}5$ before
+recovering at higher dimensions, so we report both the mean and a
+representative deployment cell rather than relying on the aggregate
+alone.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.85\textwidth]{recall_exactness_proof.png}
   \caption{Distance-based recall for FastGraph across detector-derived
@@ -1052,7 +1041,7 @@ deployment points in this regime.
   \label{fig:recall_exactness}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.85\textwidth]{recall_controlled_comparison.png}
   \caption{Recall comparison under kernel-matched evaluation. Exact
@@ -1061,7 +1050,7 @@ deployment points in this regime.
   \label{fig:recall_comparison}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.85\textwidth]{recall_speed_pareto.png}
   \caption{Recall-speed Pareto. FastGraph occupies the
@@ -1070,7 +1059,7 @@ deployment points in this regime.
   \label{fig:recall_pareto}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.85\textwidth]{recall_vs_dimension.png}
   \caption{Distance-based recall versus dimension at the best-quality
