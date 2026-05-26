@@ -54,9 +54,8 @@
 
 %% ============================================================
 %% Numeric-claim macros — every quantitative claim in the body
-%% is bound to one of these. mps:50 calibrated, N=5M, k=40 unless
-%% otherwise noted. Sources: NOTES.md headline-speedups table,
-%% PROJECT_LOG.md mbd-ablation entry.
+%% is bound to one of these. Headline HGCAL values use N=5M, k=40
+%% unless otherwise noted.
 %% ============================================================
 
 % Per-dimension speedups vs FAISS-GPU IndexFlatL2
@@ -110,11 +109,6 @@
 \newcommand{\spdSynthDthree}{55\ensuremath{\times}}
 \newcommand{\spdSynthDfive}{4.8\ensuremath{\times}}
 
-% Sweep / calibration accounting
-\newcommand{\noRegressionCells}{108}
-\newcommand{\mpsSlot}{50}
-\newcommand{\calibSpread}{1--4\%}
-\newcommand{\cagraCalibLoss}{25\%}
 \newcommand{\hgcalRecHits}{1.16\,billion}
 
 % max\_bin\_dims (k) optima from ablation
@@ -625,62 +619,25 @@ All GPU experiments use a single NVIDIA A100 80\,GB PCIe with CUDA
 (approximate), and GGNN~\cite{ggnn} (approximate); FastGraph is
 compiled from the public release.
 
-\paragraph*{MPS calibration.}
-Production benchmarks on this cluster requested \texttt{--gres=gpu:1},
-while the PCA sweep was collected under \texttt{--gres=mps:\mpsSlot}
-(50\,\% of the A100 via NVIDIA MPS) at the higher fairshare tier.
-To make the cross-allocation comparison apples-to-apples we ran a
-matched-allocation calibration sweep for each baseline at the
-headline $(d, N, k)$ points: FAISS-GPU and cuVS brute force agreed
-within \calibSpread\ between gpu:1 and mps:50, GGNN agreed within
-the same tolerance, and FastGraph short-circuits to vanilla code at
-$d \le k$ where the two allocations are observed to match within
-1--3\,\% directly. CAGRA was the lone outlier, running
-\cagraCalibLoss\ slower at mps:50. We therefore report every
-cross-method comparison from the mps:50 calibration sweep---the same
-allocation as FastGraph---which is both the cleaner measurement and
-the allocation-matched one. We additionally identified four cells
-in the gpu:1 production CSV (cuVS BF at $d{\in}\{2,4,8,9\}$,
-$N{=}5$\,M, $k{=}40$) that were contaminated by concurrent jobs and
-ran $\sim 2\times$ slower than the isolated mps:50 calibration;
-those production cells are not used in the paper.
-
 \paragraph*{Timing protocol.}
-All timed regions are bracketed by \texttt{torch.cuda.synchronize()}
-calls on the same stream as the kernel launch. Timing figures and
-scalar comparisons report the median across successful repetitions;
-error bars show the interquartile range when repeated measurements
-are available. Memory allocations and JIT
-compilations are warmed before the timed region. The Slurm submission
-pipeline serializes calibration jobs with
-\texttt{--dependency=afterany:<prev>} chains so that no two
-mps-fraction jobs share the GPU during a calibration measurement; in
-preliminary work we observed that two concurrent mps:50 jobs slowed
-bandwidth-bound backends (FAISS, cuVS BF) by $\sim 2.3\times$, while
-the binning-dominated FastGraph kernel was unaffected.
+Timing runs use a single A100 allocation through
+\texttt{--gres=mps:100}. All timed regions are bracketed by
+\texttt{torch.cuda.synchronize()} calls on the active CUDA stream,
+after warm-up for memory allocation and JIT compilation. Figures and
+scalar comparisons report medians across successful repetitions; error
+bars show the interquartile range when repeated measurements are
+available.
 
 \paragraph*{CAGRA build path.}
-CAGRA's default build pipeline initializes the search graph with
-IVF-PQ and then runs a graph-optimization pass to add reverse edges
-and prune duplicates. On HGCAL data this pipeline fails at $d \ge 5$
-with a RAFT assertion (\texttt{graph\_core.cuh:1406}) reporting
-``too many invalid or duplicated neighbor nodes.'' The diagnostic
-``self-included ratio'' that CAGRA reports during the IVF-PQ phase is
-$<1\%$ even at $d{=}2$ where the build does succeed---a healthy graph
-would show $\sim 100\%$---indicating that the PQ codebooks have
-collapsed. The root cause is the heterogeneous per-column scale of
-HGCAL recHit features (energy $\mathcal{O}(100)$, geometric
-coordinates $\mathcal{O}(100\text{--}1000)$\,cm, time
-$\mathcal{O}(1)$\,ns, layer index $\mathcal{O}(10)$): the
-PQ subvector codebooks train against the full-vector norm, which is
-dominated by the large-magnitude columns, and the codebooks
-collapse. Switching to \texttt{build\_algo="nn\_descent"} sidesteps
-the PQ step entirely by refining an approximate $k$NN graph using
-raw fp32 distances. NN-Descent succeeds across the full $d{=}2$--$10$
-sweep. We use NN-Descent as the canonical CAGRA build path
-throughout the paper; at $d{=}8$, $N{=}5$\,M, $k{=}40$, FastGraph
-remains \spdHGCALcagradeight\ faster than this stronger CAGRA
-variant.
+CAGRA's default IVF-PQ build path fails on HGCAL data at $d \ge 5$
+with a RAFT assertion about invalid or duplicated neighbor nodes. The
+failure is consistent with PQ codebook collapse on heterogeneous-scale
+features: energy, geometry, time, and layer index occupy very different
+numeric ranges. We therefore use CAGRA's
+\texttt{build\_algo="nn\_descent"} path throughout the paper; it
+avoids the PQ initialization, succeeds across the full $d{=}2$--$10$
+sweep, and is the stronger CAGRA baseline used in all plots and
+tables.
 
 \paragraph*{The \texttt{max\_bin\_dims} hyperparameter.}
 The binning subspace size $k$ is exposed as
@@ -1282,7 +1239,7 @@ released kernel surface covers binning subspace size $k \in \{2, 3, 4, 5\}$;
 the $k{=}6, 7$ kernels exist as an internal ablation
 (Section~\ref{sec:mbd-ablation}) and are intentionally not published, as
 $k{=}7$ hits a per-block register limit and is unsafe to ship.
-The benchmarking harness, queue files, calibration scripts, and the
+The benchmarking harness, queue files, runner scripts, and the
 per-backend timing CSVs used to produce every figure in this paper live
 in a companion repository,
 \url{https://github.com/AgarwalAarush/fgc-performance}. The CLOVER
