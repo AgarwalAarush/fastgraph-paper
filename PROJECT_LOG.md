@@ -462,3 +462,23 @@ wald2019rtnn, evangelou2021rtknn, nagarajan2023arkade.
    curves matching `tab:headline-speedups`. The figure file paths in
    Paper.tex are unchanged so this is a plot-script update only.
 4. **Page-as-image proofread** — after the regenerated plots are in.
+
+## 2026-05-26 — CAGRA-nn_descent full mps:100 sweep queued
+
+Reviewer-style plot review flagged that the HGCAL N-scaling figures had
+only a single CAGRA-nn_descent point at `N=5M`, because the original
+NN-Descent rerun was intentionally headline-only (`d=2..10`, `N=5M`,
+`k=40`, 3 reps). We now want a fair CAGRA-nn_descent curve in the
+dataset-size plots rather than omitting the baseline or showing a
+one-point series.
+
+Added and submitted `Performance/run_cagra_nn_descent_mps100_full_slurm.sh`
+as Slurm job 16822. The job requests `--gres=mps:100`, initializes a
+resumable queue `nn_descent-mps100-full-runs-cuvs_cagra.txt`, and writes
+isolated output to `cagra_nn_descent_mps100_full.csv` so the new full-GPU
+measurements do not mix with the old mps:50 headline CSV. Coverage matches
+the paper/backend v5 grid: dense N scans at `d=3` and `d=5`, five-point
+N scans elsewhere, all `k in {10,40,100}`, 3 reps per cell.
+
+When the job drains, update the CAGRA merge/plot path deliberately rather
+than relying on the old `merge_baseline_extended.py` passthrough behavior.
