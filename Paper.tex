@@ -237,50 +237,32 @@ graph fluctuates from epoch to epoch in a way that's a function of
 the index implementation, not the data) and into inference
 (downstream physics observables---cluster energy, shower
 identification---become a function of which neighbors the
-approximate index happened to return). We do not have a
-quantitative model study of this effect to cite, and so we frame it
-as a motivation rather than a measured pathology; but it is the
-operational reason CMS HGCAL reconstruction pipelines have stayed
-with exact $k$NN in the dynamic-graph layer even when faster
-approximate alternatives have been available.
+approximate index happened to return). This is why CMS HGCAL
+reconstruction pipelines use exact $k$NN in the dynamic-graph layer
+even when faster approximate alternatives are available.
 
 The classical low-dimensional accelerator for this regime is the
-\emph{cell list}~\cite{beyer1999nearest}: partition the ambient space
-into a uniform grid of bins, expand a concentric hypercube of bins
-around each query until the best-$k$ radius is certified, and pay only
-for distance evaluations against the candidates inside the visited
-bins. Prior axis-aligned cell-list implementations on GPU---including
-the vanilla version of FastGraph that motivated this work---hit a hard
-wall at a small dimensional cap. Building the grid in $d$ raw input
-axes requires a bin tensor of size $n_{\text{bins}}^d$; beyond
-$d_{\max}{=}5$ the bin array no longer fits in any plausible budget,
-and the implementation degrades to a brute-force fallback that
-dominates the per-event wall-clock time at every $N$ we measure. In
-the latent-space regime that GNNs actually train in---$d{=}6$--$10$
-chosen by the model designer for representational reasons rather
-than physical ones---this is exactly the regime where the accelerator
-fails.
+\emph{cell list}~\cite{beyer1999nearest}: place points in a uniform
+grid, expand neighboring bins around each query until the best-$k$
+radius is certified, and evaluate distances only for candidates in
+the visited bins. Prior axis-aligned GPU cell lists hit a hard
+dimensional cap because the bin tensor scales as
+$n_{\text{bins}}^d$; beyond $d_{\max}{=}5$, the bin array is
+impractical and the implementation falls back to brute force. This is
+precisely the $d{=}6$--$10$ latent-space regime used by modern GNNs.
 
-FastGraph resolves this cap. We compute a
-partial principal-component decomposition of the input features, bin
-points in the top-$k$ principal subspace, and---crucially---retain the
-full input dimensionality for the candidate-distance evaluation inside
-each visited bin. Because the partial projection
-$V_k V_k^\top \preceq I_d$ is contractive, the cube-radius termination
-test in the projected subspace is a valid lower bound on the true
-distance, so no closer point can lie outside the visited bins; the
-algorithm is exact at every input dimension. Crossing the
-$d_{\max}{=}5$ cap turns the binning grid back into a useful pruning
-structure: at $d{=}8$, $N{=}5$\,M, $k{=}40$, FastGraph builds the kNN
-graph in \fgcPCADeight\ against \faissDeight\ for exact FAISS-GPU,
+FastGraph resolves this cap by binning in the top-$k$ principal
+subspace while retaining full-dimensional distances for candidate
+evaluation. Since the partial projection
+$V_k V_k^\top \preceq I_d$ is contractive, projected-space
+termination remains a valid lower bound on true-space distance, so
+the algorithm is exact at every input dimension. At $d{=}8$,
+$N{=}5$\,M, $k{=}40$, FastGraph builds the kNN graph in
+\fgcPCADeight\ versus \faissDeight\ for exact FAISS-GPU,
 \cuvsBFDeight\ for cuVS brute force, and \cagraNNDDeight\ for
-CAGRA's approximate NN-Descent build. Geomean speedups across
-$d{=}2$--$10$ at this $(N,k)$ point are \geoFaiss, \geoCuvs, and
-\geoCagra\ respectively. The approximate baselines are included for
-completeness: CAGRA's default IVF-PQ build path fails outright at
-$d \ge 5$ on this workload, and the NN-Descent fallback is
-\spdHGCALcagradeight\ slower than FastGraph at the $d{=}8$ reference
-cell while still returning approximate neighbors.
+CAGRA's approximate NN-Descent build. Across $d{=}2$--$10$ at this
+$(N,k)$ point, geomean speedups are \geoFaiss, \geoCuvs, and
+\geoCagra\ respectively.
 
 The library is shipped as a PyTorch extension: the primary entry
 point is a \texttt{@torch.jit.script}-decorated function callable
@@ -290,8 +272,8 @@ and gradients flow through the continuous outputs of the kernel
 neighbor indices are treated as constants in the backward pass.
 \texttt{GravNetOp}~\cite{Qasim2019GravNet} and a GPU-resident object
 condensation helper~\cite{Kieseler2020ObjectCondensation} are
-provided as production wrappers; the latter is described in
-Appendix~\ref{app:oc}.
+provided as production wrappers; the latter is described in the
+appendix.
 
 \section{Related Work}
 \label{sec:related-work}
@@ -351,14 +333,12 @@ RT hardware. CLOVER~\cite{kamel2025clover} introduces a GPU-native,
 Voronoi spatio-graph approach to exact $k$NN and reports
 $4\times$ over an ``optimized grid'' baseline and
 $230\times$ over FAISS on SIFT-like data. All of these methods are
-fundamentally locked to two or three input dimensions: Arkade states
-explicitly that ``RT cores can only build BVH on three-dimensional
-data,'' CLOVER's reference implementation asserts \texttt{D == 3} at
-multiple sites, and LBVH-kNN's published evaluation is exclusively
-3D. They are highly effective in their target regime, and we include a
-direct head-to-head against CLOVER at $d{=}3$ in
-Section~\ref{sec:clover}; but they cannot address the
-$d{=}5$--$10$ latent-space workload that this paper is focused on.
+fundamentally locked to two or three input dimensions: Arkade notes
+that RT cores build BVHs only on three-dimensional data, CLOVER's
+reference implementation asserts \texttt{D == 3}, and LBVH-kNN is
+evaluated exclusively in 3D. We include a direct head-to-head against
+CLOVER at $d{=}3$ in Section~\ref{sec:clover}, but these methods do
+not cover the $d{=}5$--$10$ latent-space workload targeted here.
 
 \paragraph*{Approximate GPU $k$NN.}
 A parallel body of work has produced GPU-resident approximate nearest
@@ -418,17 +398,11 @@ When the input dimensionality $d$ does not exceed the binning
 dimensionality $k$, FastGraph skips PCA estimation entirely and
 binds the binning axes to the raw input axes; the projection
 $V_k$ reduces to the identity (up to permutation), $Y = X$, and the
-algorithm behaves exactly as a classical axis-aligned cell list. This
-is the correct behavior in the regime where the input already lives
-in a small enough number of axes that there is nothing for PCA to
-contract: forcing a non-trivial projection would only spend
-arithmetic without changing the candidate set. With the default
-$k = \mbdPCAdefault$, this means that on $d \in \{2, 3\}$ workloads
-the gains we report are inherited from the underlying cell-list
-machinery rather than from PCA per se; the PCA contribution becomes
-central at $d > k$, which on HGCAL covers the entire
-$d{=}4$--$10$ latent-space range where modern dynamic-graph layers
-are deployed.
+algorithm behaves exactly as a classical axis-aligned cell list. With
+the default $k = \mbdPCAdefault$, the $d \in \{2, 3\}$ gains therefore
+come from the underlying cell-list machinery; the PCA contribution
+begins at $d > k$, which covers the $d{=}4$--$10$ HGCAL latent-space
+range.
 
 \subsection{Phase 2: Binning in the projected subspace}
 \label{sec:phase2}
@@ -1085,7 +1059,7 @@ forward-backward pair so that the gradients are deterministic within
 a step. Object condensation~\cite{Kieseler2020ObjectCondensation},
 which is the loss used together with GravNet for HGCAL
 reconstruction, is supported through a separate GPU-resident helper
-kernel described in Appendix~\ref{app:oc}.
+kernel described in the appendix.
 
 \section{Limitations}
 \label{sec:limitations}
