@@ -482,3 +482,21 @@ N scans elsewhere, all `k in {10,40,100}`, 3 reps per cell.
 
 When the job drains, update the CAGRA merge/plot path deliberately rather
 than relying on the old `merge_baseline_extended.py` passthrough behavior.
+
+## 2026-05-26 — Integrated full CAGRA-nn_descent mps:100 sweep
+
+Job 16822 completed successfully on `rogue02` in 7:25:19 with
+`ReqTRES=gres/mps=100` and `AllocTRES=gres/mps=100`. The output
+`Performance/cagra_nn_descent_mps100_full.csv` contains 513 ok rows:
+171 cells, exactly 3 reps per cell, covering `d=2..10`,
+`k in {10,40,100}`, dense N scans at d=3 and d=5, and five-point N
+scans elsewhere. The queue drained fully.
+
+Updated `FastGraph-Plotting/make_paper_plots_v4.py` to load this full
+mps:100 CAGRA CSV instead of the headline-only
+`cagra_nn_descent_v5.csv`, with a fallback to the old file if the new one
+is absent. Regenerated HGCAL plots now include CAGRA-nn_descent as a
+proper curve in the N-scaling panels. The 5M k=40 medians are close to
+the prior headline-only run (generally 0--8% faster under mps:100);
+Table 1's CAGRA column was refreshed accordingly, including the
+near-tie at d=4 (0.98x) and the updated CAGRA geomean of 4.3x.

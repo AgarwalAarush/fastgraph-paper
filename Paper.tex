@@ -78,21 +78,21 @@
 \newcommand{\spdHGCALcuvsdten}{14.31\ensuremath{\times}}
 
 % vs CAGRA-NN-Descent (approximate GPU baseline, after IVF-PQ fix)
-\newcommand{\spdHGCALcagradtwo}{1.51\ensuremath{\times}}
-\newcommand{\spdHGCALcagradsix}{4.52\ensuremath{\times}}
-\newcommand{\spdHGCALcagradeight}{18.03\ensuremath{\times}}
-\newcommand{\spdHGCALcagradten}{13.17\ensuremath{\times}}
+\newcommand{\spdHGCALcagradtwo}{1.45\ensuremath{\times}}
+\newcommand{\spdHGCALcagradsix}{4.40\ensuremath{\times}}
+\newcommand{\spdHGCALcagradeight}{17.36\ensuremath{\times}}
+\newcommand{\spdHGCALcagradten}{13.67\ensuremath{\times}}
 
 % Geomeans across d=2-10 at N=5M, k=40
 \newcommand{\geoFaiss}{10.1\ensuremath{\times}}
 \newcommand{\geoCuvs}{4.8\ensuremath{\times}}
-\newcommand{\geoCagra}{4.4\ensuremath{\times}}
+\newcommand{\geoCagra}{4.3\ensuremath{\times}}
 
 % Reference-cell wall-clocks at d=8, N=5M, k=40
 \newcommand{\fgcPCADeight}{7.2\,s}
 \newcommand{\faissDeight}{306\,s}
 \newcommand{\cuvsBFDeight}{146\,s}
-\newcommand{\cagraNNDDeight}{131\,s}
+\newcommand{\cagraNNDDeight}{127\,s}
 
 % Internal ablation reference cells (d=8, N=5M, k=40)
 % Binary A median, d=8 N=5M k=40, axis best within released kernel
@@ -723,8 +723,9 @@ heterogeneous-scale pathology of HGCAL.
 Table~\ref{tab:headline-speedups} reports the cross-method speedups
 of FastGraph at the headline operating point. FastGraph is the
 fastest \emph{exact} GPU $k$NN method at every dimension we measure
-and is also faster than the approximate CAGRA-NN-Descent baseline at
-every dimension; the GGNN approximate baseline does win on raw
+and has a \geoCagra\ geomean advantage over the approximate
+CAGRA-NN-Descent build; the $d{=}4$ CAGRA cell is an essentially tied
+$0.98\times$ case. The GGNN approximate baseline does win on raw
 wall-clock at low $d$, but at recall well under 1.0 in matched-recall
 evaluation (Section~\ref{sec:recall})---a tradeoff the exact-neighbor
 regime targeted by this paper cannot accept. The relative advantage
@@ -751,17 +752,17 @@ mean of the column across $d{=}2$--$10$.}
 \toprule
 $d$ & vs FAISS & vs cuVS BF & vs CAGRA-nnd \\
 \midrule
-2  & 3.42$\times$  & 1.65$\times$  & 1.51$\times$ \\
+2  & 3.42$\times$  & 1.65$\times$  & 1.45$\times$ \\
 3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$ \\
-4  & 2.30$\times$  & 1.12$\times$  & 1.01$\times$ \\
-5  & 3.09$\times$  & 1.48$\times$  & 1.40$\times$ \\
-6  & 10.51$\times$ & 4.92$\times$  & 4.52$\times$ \\
-7  & 35.23$\times$ & 16.77$\times$ & 14.82$\times$ \\
-8  & 42.46$\times$ & 20.15$\times$ & 18.03$\times$ \\
-9  & 32.68$\times$ & 15.60$\times$ & 14.36$\times$ \\
-10 & 29.83$\times$ & 14.31$\times$ & 13.17$\times$ \\
+4  & 2.30$\times$  & 1.12$\times$  & 0.98$\times$ \\
+5  & 3.09$\times$  & 1.48$\times$  & 1.39$\times$ \\
+6  & 10.51$\times$ & 4.92$\times$  & 4.40$\times$ \\
+7  & 35.23$\times$ & 16.77$\times$ & 14.53$\times$ \\
+8  & 42.46$\times$ & 20.15$\times$ & 17.36$\times$ \\
+9  & 32.68$\times$ & 15.60$\times$ & 13.37$\times$ \\
+10 & 29.83$\times$ & 14.31$\times$ & 13.67$\times$ \\
 \midrule
-geomean & 10.1$\times$ & 4.8$\times$ & 4.4$\times$ \\
+geomean & 10.1$\times$ & 4.8$\times$ & 4.3$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
