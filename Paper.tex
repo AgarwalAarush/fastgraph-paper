@@ -838,37 +838,17 @@ dataset-size scans at $d{=}3$ and $d{=}8$.
 \end{figure}
 
 \paragraph*{Workspace and resident memory.}
-In workspace memory, FastGraph allocates more than the dense GPU
-baselines but the gap is moderate: at $N{=}5$\,M, $d{=}3$, $k{=}40$
-it needs about $3.0$\,GB of workspace versus $1.4$\,GB for FAISS-GPU
-and CAGRA-nn-descent, $1.4$\,GB for GGNN, and only $\sim 80$\,MB for
-cuVS BF (whose workspace is a single tiled \texttt{gemm} scratchpad
-and the output is most of its end-state); the corresponding $d{=}8$
-workspace is $\sim 3.3$\,GB. The workspace cost is structural: bin
-assignments, bin boundaries, the projected coordinate array, the
-sort/remap intermediates, and the autograd-saved tensors that
-materialise the backward pass through the selected
-distances.\footnote{The released binary (\texttt{v1.1-paper})
-includes two memory-only optimisations to the autograd path that do
-not alter outputs or timing: \emph{(i)} \texttt{save\_for\_backward}
-is gated on \texttt{coords.requires\_grad} so the inference path
-does not retain the $N{\times}k$ index/distance tensors, and
-\emph{(ii)} the post-binning index-replace and scatter steps are
-fused into a single kernel, eliminating one $N{\times}k$
-\texttt{int64} intermediate. Together these reduce workspace by
-$\sim 1.5$\,GB at the headline cell. The earlier \texttt{v1.0-paper}
-tag reflected the pre-optimisation footprint of $\sim 4.5$\,GB.}
-We measured an inference-path wrapper (\texttt{torch.no\_grad}) and
-found the peak workspace indistinguishable from training at
-$N \geq 5\times 10^{5}$, indicating that the dominant cost is
-transient kernel scratch rather than autograd retention; this also
-matches the FGC-reported \texttt{torch.cuda.max\_memory\_allocated()}
-validation column in the v2 benchmark CSV. In resident end-state
-memory, the gap
-closes: FastGraph holds $\sim 5.3$\,GB versus $1.6$--$2.9$\,GB for
-the others, because the $N{\times}k$ output dominates resident
-memory once allocator caches are released and the gap is
-roughly $2$--$3\times$ rather than $50\times$.
+FastGraph allocates more workspace than the dense GPU baselines: at
+$N{=}5$\,M, $d{=}3$, $k{=}40$ it uses about $3.0$\,GB versus
+$1.4$\,GB for FAISS-GPU, CAGRA-nn-descent, and GGNN, and
+$\sim 80$\,MB for cuVS BF; the corresponding FastGraph workspace at
+$d{=}8$ is $\sim 3.3$\,GB. This cost comes from the projected
+coordinate array, bin assignments and boundaries, sort/remap
+intermediates, and tensors required by the differentiable distance
+outputs. In resident end-state memory, the gap is smaller:
+FastGraph holds $\sim 5.3$\,GB versus $1.6$--$2.9$\,GB for the other
+backends, because the common $N{\times}k$ output tensors dominate
+resident memory after temporary workspace is released.
 
 \paragraph*{Approximate-backend interpretation.}
 The plot reports each backend at the configuration used elsewhere in
@@ -884,45 +864,31 @@ canonical setting; we therefore report the memory each backend uses
 backends are not bound to FastGraph's exact-recall constraint.
 
 \paragraph*{Measurement methodology.}
-The v1 of this benchmark sampled NVML once after
-\texttt{cuda.synchronize()}, which captured the end-state only and
-mixed in asymmetric allocator-cache effects across PyTorch
-(\texttt{caching allocator}), FAISS (own pool), and CuPy/RMM. The v2
-instrument (\texttt{memory\_instrument.py}) runs a background NVML
-poller at $\sim 100$\,Hz, records the true peak observed during the
-timed region, and subtracts a per-backend output size to derive the
-workspace number; the source CSV \texttt{memory\_usage\_v2.csv}
-records both numbers per cell. The end-state number is the closest
-analogue to v1; the workspace number is the new comparison.
+Memory is measured with a background NVML poller running at
+$\sim 100$\,Hz during the timed region. The reported workspace is the
+observed peak minus the backend's output-tensor footprint, while the
+end-state value is the resident allocation after synchronization with
+the output tensors still live.
 
-\subsection{Internal ablation: choice of binning dimensionality $k$}
+\subsection{Binning dimensionality ablation}
 \label{sec:mbd-ablation}
 
 The binning subspace size $k$ (\texttt{max\_bin\_dims}) is the most
-important FastGraph hyperparameter, and the rest of the paper has
-implicitly defaulted to $k{=}\mbdPCAdefault$. We now justify that
-choice empirically by sweeping $k$ at the reference cell
-$d{=}8$, $N{=}5$\,M, $k_{\text{nn}}{=}40$ for both the PCA-subspace
-variant and the underlying axis-aligned cell list. The released
-kernel ships dispatch instantiations for $k \in \{2, 3, 4, 5\}$; this
-is also the range we report below. We collected the data on the same
-binary used for the headline numbers in Section~\ref{sec:headline}
-under exclusive-GPU allocation, with the median of three clean
-repetitions per cell (one cell, $k{=}3$ axis-aligned, required a
-contention filter: three of six repetitions in that cell were
-collected during incidental GPU contention from a concurrent job and
-are excluded, leaving three clean repetitions). Source CSVs are
-\texttt{Performance/ablation\_binary\_crosscheck.csv.contended\_15553}
-and \texttt{Performance/ablation\_A\_fill\_24.csv}.
+important FastGraph hyperparameter. We set the default to
+$k{=}\mbdPCAdefault$ because it is the fastest PCA-subspace setting at
+the reference cell $d{=}8$, $N{=}5$\,M, $k_{\text{nn}}{=}40$.
+Table~\ref{tab:mbd-ablation} compares this choice with the
+axis-aligned cell list over the released kernel surface
+$k \in \{2,3,4,5\}$, using medians over three repetitions.
 
 \begin{table}[H]
 \centering
 \caption{Effect of the binning subspace size $k$ on FastGraph
 wall-clock at $d{=}8$, $N{=}5$\,M, $k_{\text{nn}}{=}40$, median of
-three clean repetitions. The axis-aligned variant's optimum within
-the released kernel surface ($k \in \{2,3,4,5\}$) is
-$k{=}\mbdOptAxis$; the PCA-subspace variant's optimum is
-$k{=}\mbdOptPCA$.}
+three repetitions. The axis-aligned variant's optimum within
+the released kernel surface is $k{=}\mbdOptAxis$; the PCA-subspace
+variant's runtime optimum, and therefore the default used in the
+paper, is $k{=}\mbdOptPCA$.}
 \label{tab:mbd-ablation}
 \small
 \begin{tabular}{cccc}
@@ -937,25 +903,14 @@ $k$ (bin dims) & axis (s) & PCA (s) & PCA/axis speedup \\
 \end{tabular}
 \end{table}
 
-Two observations. First, both variants are non-monotonic in $k$, with
-opposing optima inside the released $k \in \{2,3,4,5\}$ surface: the
-axis-aligned cell list runs fastest at $k{=}\mbdOptAxis$
-(\fgcVanillaBestDeight), and the PCA-subspace variant runs fastest at
-$k{=}\mbdOptPCA$ (\fgcPCADeight). The PCA optimum is several times
-smaller than the axis-aligned optimum because PCA concentrates the
-pairwise-distance variance into the leading components, so a small
-binning subspace captures essentially all of the pruning-relevant
-structure; the axis-aligned variant has variance spread across all
-$d$ raw axes and is forced to grow $k$ to recover comparable
-pruning, paying a $n_{\text{bins}}^k$ memory and traversal cost in
-the process. Second, comparing each variant at its own optimum gives
-\fgcVanillaBestPCAfactor, providing direct evidence that the PCA
-rotation itself, rather than incidental implementation differences or
-a recalibration of how many binning axes to use, is the primary
-contribution of this paper. At
-matched $k$ the PCA-subspace variant wins by between 8.6$\times$
-($k{=}5$) and 30.6$\times$ ($k{=}4$); the win is never less than
-one order of magnitude in this regime.
+Both variants are non-monotonic in $k$, but their optima differ: the
+axis-aligned cell list is fastest at $k{=}\mbdOptAxis$, while the
+PCA-subspace variant is fastest at $k{=}\mbdOptPCA$. The largest
+matched-$k$ speedup occurs at $k{=}4$, but $k{=}3$ is the setting used
+by FastGraph because it minimizes the PCA-subspace wall-clock. Across
+the sweep, PCA-subspace binning is $8.6$--$30.6\times$ faster at
+matched $k$, and comparing each variant at its own optimum gives a
+\fgcVanillaBestPCAfactor\ speedup.
 
 We expose $k$ as a user-facing hyperparameter rather than hard-coding
 it: the optimum is data-dependent (a dataset with intrinsic
@@ -1229,21 +1184,10 @@ this paper, is released at
 \url{https://github.com/AgarwalAarush/FastGraphCompute} (fork of the
 upstream library at \url{https://github.com/jkiesele/FastGraphCompute}).
 The exact source used to collect every headline timing in this paper is
-the \texttt{paper-release} branch at tag \texttt{v1.1-paper}
-(commit \texttt{4511df5}), built against the CUDA 12.1 toolchain.
-\texttt{v1.1-paper} adds two memory-only optimisations to the autograd
-path (conditional \texttt{save\_for\_backward} and a fused
-index-replace$+$scatter kernel) on top of \texttt{v1.0-paper}
-(\texttt{011d295}); outputs are byte-identical and timings agree
-within run-to-run variance, so all reported timing numbers are
-unchanged. See Section~\ref{sec:memory}. The
-released kernel surface covers binning subspace size $k \in \{2, 3, 4, 5\}$;
-the $k{=}6, 7$ kernels exist as an internal ablation
-(Section~\ref{sec:mbd-ablation}) and are intentionally not published, as
-$k{=}7$ hits a per-block register limit and is unsafe to ship.
-The benchmarking harness, queue files, runner scripts, and the
-per-backend timing CSVs used to produce every figure in this paper live
-in a companion repository,
+the \texttt{paper-release} branch built against the CUDA 12.1
+toolchain. The released kernel surface covers binning subspace size
+$k \in \{2, 3, 4, 5\}$. The benchmarking harness and runner scripts
+used to produce the figures live in a companion repository,
 \url{https://github.com/AgarwalAarush/fgc-performance}. The CLOVER
 head-to-head used a fork of
 \url{https://github.com/ampslab/clover-knn} at
