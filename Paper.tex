@@ -475,7 +475,9 @@ query bin. It linearises each shell into a flat sequence, converts
 each step back into per-dimension offsets, discards interior cells,
 and yields the next surface bin's flat index. The stepper carries no
 algorithmic role; the kNN guarantee lives in the outer kernel of
-Algorithm~\ref{alg:knn}.
+Algorithm~\ref{alg:knn}. Its job is purely to enumerate the projected
+shells in a cache-friendly order so the distance kernel can stay
+focused on the full-dimensional checks.
 
 \subsection{Pseudocode}
 
@@ -484,7 +486,10 @@ distinction explicit: the bin indices (\texttt{binIdx}) and the
 stepper operate on $y$-space; the distance function
 \texttt{calcDist} operates on the original $x$-space coordinates;
 the termination test references the projected-space cube radius;
-the contraction argument certifies the result.
+the contraction argument certifies the result. This separation keeps
+the implementation and the proof aligned: projected-space search only
+decides which bins to visit, while exactness is enforced by the
+original-space distance computation.
 
 \begin{algorithm}[H]
 \DontPrintSemicolon
@@ -528,7 +533,7 @@ subspace size $k$, \emph{independently of the input dimension} $d$.
 This is what removes the small-$d$ cap that limited prior cell-list
 GPU $k$NN implementations.
 
-\begin{description}[leftmargin=0pt,itemindent=0pt,labelsep=0.6em,
+\begin{description}[leftmargin=1.25em,itemindent=0pt,labelsep=0.6em,
   itemsep=0.45em,topsep=0.35em,font=\normalfont\itshape]
 \item[Setup.]
 Subspace estimation runs a partial eigen-decomposition of $X^\top X$
@@ -547,6 +552,10 @@ $O(d)$ for the full-dim distance and at most $O(K)$ for the heap
 update, giving expected $O(K(d + K))$ per query. The worst case is the
 degenerate all-points-in-one-bin configuration, which falls back to
 the brute-force $O(N(d + K))$.
+
+In the dynamic-graph setting, the setup terms are amortized over the
+full query sweep on each event, so the per-query behavior is the more
+important operational quantity.
 
 \item[Parallel cost.]
 With $P$ CUDA threads,
@@ -696,14 +705,13 @@ The right-hand table in Figure~\ref{fig:headline_dim} reports the cross-method s
 of FastGraph at the headline operating point. FastGraph is the
 fastest \emph{exact} GPU $k$NN method at every dimension we measure
 and has a \geoCagra\ geomean advantage over the approximate
-CAGRA-NN-Descent build; the $d{=}4$ CAGRA cell is an essentially tied
-$0.98\times$ case. The GGNN approximate baseline does win on raw
-wall-clock at low $d$, but at recall well under 1.0 in matched-recall
-evaluation (Section~\ref{sec:recall})---a tradeoff the exact-neighbor
-regime targeted by this paper cannot accept. The relative advantage
-is widest in the $d{=}7$--$10$ regime where dense exact baselines pay
-the full quadratic cost and the approximate baselines have to retain
-enough graph quality to remain useful. Geomean across $d{=}2$--$10$ at this
+CAGRA-NN-Descent build. The GGNN approximate baseline does win on raw
+wall-clock at low $d$, but its much lower recall in matched-recall
+evaluation (Section~\ref{sec:recall}) means the timing should be read
+with that context in mind. The relative advantage is widest in the
+$d{=}7$--$10$ regime where dense exact baselines pay the full
+quadratic cost and the approximate baselines have to retain enough
+graph quality to remain useful. Geomean across $d{=}2$--$10$ at this
 operating point is \geoFaiss\ over FAISS, \geoCuvs\ over cuVS BF
 (the strongest exact GPU baseline), and \geoCagra\ over
 CAGRA-NN-Descent. Section~\ref{sec:mbd-ablation} separately reports
