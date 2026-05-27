@@ -500,3 +500,16 @@ proper curve in the N-scaling panels. The 5M k=40 medians are close to
 the prior headline-only run (generally 0--8% faster under mps:100);
 Table 1's CAGRA column was refreshed accordingly, including the
 near-tie at d=4 (0.98x) and the updated CAGRA geomean of 4.3x.
+
+## 2026-05-27 — Corrected FAISS recall convention
+
+The recall bar plot had shown FAISS-GPU below 1.0 because
+`recall_dist_faiss.csv` compares FAISS `IndexFlatL2` indices against the
+FastGraph element-wise squared-distance threshold. That is not a
+kernel-matched evaluation for FAISS. A direct BLAS-form check at
+`d=3, N=500k, k=40` showed FAISS self-kernel recall of 1.0; the old
+element-wise threshold reproduced the plotted 0.865 value. Updated the
+plotting path and paper text to treat FAISS-GPU as exact under its own L2
+kernel, while keeping approximate CAGRA-NN-Descent and GGNN as
+distance-based recall tradeoff baselines. Removed the recall-vs-dimension
+figure from the paper.

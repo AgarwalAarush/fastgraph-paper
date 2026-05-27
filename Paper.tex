@@ -965,9 +965,11 @@ neighbor as correct when its squared distance is no larger than the
 $k$-th reference distance plus a small tolerance. FastGraph and its
 reference use element-wise squared $\ell_2$ distances, which avoid
 the cancellation that can affect coincident-hit cases under the BLAS
-expansion. FAISS's \texttt{IndexFlatL2} is evaluated against a
-BLAS-consistent reference so exact methods are not penalized for
-kernel-specific floating-point differences.
+expansion. FAISS-GPU \texttt{IndexFlatL2} is treated as exact under
+its own L2 kernel; the recall plots report exact dense baselines under
+their kernel-matched distance convention and approximate graph
+builders under the same distance-based criterion used for their
+returned neighbors.
 
 Under this metric FastGraph achieves recall $= 1.0$ across every
 tested configuration ($d \in \{2,\ldots,10\}$, $k_{\text{nn}} \in
@@ -1009,10 +1011,10 @@ rather than dedicating a separate table column to it.
 \begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.85\textwidth]{recall_exactness_proof.png}
-  \caption{Distance-based recall for FastGraph across detector-derived
-  configurations. The contraction argument plus the bit-identical
-  comparison against brute force at small $N$ together support
-  recall $= 1.0$ across the full sweep.}
+  \caption{Representative distance-based recall on HGCAL data. FastGraph
+  and FAISS-GPU reach recall $=1.0$ under their kernel-matched exact
+  distance conventions, while the approximate graph builders trade
+  recall for speed.}
   \label{fig:recall_exactness}
 \end{figure}
 
@@ -1023,16 +1025,6 @@ rather than dedicating a separate table column to it.
   exact / fast region; approximate methods are only competitive
   when lower recall is acceptable.}
   \label{fig:recall_pareto}
-\end{figure}
-
-\begin{figure}[!htbp]
-\centering
-  \includegraphics[width=0.85\textwidth]{recall_vs_dimension.png}
-  \caption{Distance-based recall versus dimension at the best-quality
-  parameter setting ($N{=}10^5$, $k{=}40$). FastGraph holds
-  recall $= 1.0$ across every dimension; CAGRA and GGNN degrade
-  above $d{=}3$ and neither reaches 99\,\%.}
-  \label{fig:recall_vs_dim}
 \end{figure}
 
 \subsection{Dynamic graph construction in GNNs}
