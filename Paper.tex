@@ -648,50 +648,46 @@ heterogeneous-scale pathology of HGCAL.
 
 \begin{figure}[!htbp]
 \centering
-  \begin{minipage}[t]{0.58\textwidth}
+  \begin{minipage}[t]{0.56\textwidth}
   \vspace{0pt}
   \centering
   \includegraphics[width=\linewidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png}
-  \caption{Dimensional scaling on detector data at $N{=}5$\,M, $k{=}40$.
-  FastGraph is the fastest exact GPU method across the full
-  $d{=}2$--$10$ range.
-  The approximate baseline CAGRA-NN-Descent is included as the
-  strongest approximate GPU comparator; CAGRA's default IVF-PQ build
-  fails at $d \ge 5$ on this data (Section~\ref{sec:expsetup}).}
-  \label{fig:headline_dim}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.39\textwidth}
+  \begin{minipage}[t]{0.42\textwidth}
   \vspace{0pt}
   \centering
-  \captionof{table}{Headline speedups of FastGraph at $N{=}5$\,M,
-  $k{=}40$ on HGCAL data. ``FAISS'' is \texttt{IndexFlatL2};
-  ``cuVS BF'' is exact brute force; ``CAGRA-nnd'' is CAGRA built via
-  NN-Descent.}
-  \label{tab:headline-speedups}
-  \footnotesize
-  \setlength{\tabcolsep}{2.5pt}
-  \begin{tabular}{cccc}
+  \scriptsize
+  \setlength{\tabcolsep}{1.8pt}
+  \begin{tabular}{ccccc}
   \toprule
-  $d$ & FAISS & cuVS & CAGRA \\
+  $d$ & FAISS & cuVS & CAGRA & GGNN \\
   \midrule
-  2  & 3.42$\times$  & 1.65$\times$  & 1.45$\times$ \\
-  3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$ \\
-  4  & 2.30$\times$  & 1.12$\times$  & 0.98$\times$ \\
-  5  & 3.09$\times$  & 1.48$\times$  & 1.39$\times$ \\
-  6  & 10.51$\times$ & 4.92$\times$  & 4.40$\times$ \\
-  7  & 35.23$\times$ & 16.77$\times$ & 14.53$\times$ \\
-  8  & 42.46$\times$ & 20.15$\times$ & 17.36$\times$ \\
-  9  & 32.68$\times$ & 15.60$\times$ & 13.37$\times$ \\
-  10 & 29.83$\times$ & 14.31$\times$ & 13.67$\times$ \\
+  2  & 3.42$\times$  & 1.65$\times$  & 1.45$\times$  & 0.32$\times$ \\
+  3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$  & 0.28$\times$ \\
+  4  & 2.30$\times$  & 1.12$\times$  & 0.98$\times$  & 0.22$\times$ \\
+  5  & 3.09$\times$  & 1.48$\times$  & 1.39$\times$  & 0.28$\times$ \\
+  6  & 10.51$\times$ & 4.92$\times$  & 4.40$\times$  & 0.49$\times$ \\
+  7  & 35.23$\times$ & 16.77$\times$ & 14.53$\times$ & 1.48$\times$ \\
+  8  & 42.46$\times$ & 20.15$\times$ & 17.36$\times$ & 1.86$\times$ \\
+  9  & 32.68$\times$ & 15.60$\times$ & 13.37$\times$ & 1.42$\times$ \\
+  10 & 29.83$\times$ & 14.31$\times$ & 13.67$\times$ & 1.48$\times$ \\
   \midrule
-  geo. & 10.1$\times$ & 4.8$\times$ & 4.3$\times$ \\
+  geo. & 10.1$\times$ & 4.8$\times$ & 4.3$\times$ & 0.63$\times$ \\
   \bottomrule
   \end{tabular}
   \end{minipage}
+  \caption{Headline detector benchmark at $N{=}5$\,M, $k{=}40$.
+  Left: dimensional scaling of wall-clock time. FastGraph is the
+  fastest exact GPU method across the full $d{=}2$--$10$ range.
+  Right: speedups of FastGraph over each backend at the same operating
+  point. FAISS and cuVS BF are exact; CAGRA-nnd and GGNN are approximate
+  default-recall baselines, and GGNN's timing should be read with its
+  substantially lower recall in this regime (Section~\ref{sec:recall}).}
+  \label{fig:headline_dim}
 \end{figure}
 
-Table~\ref{tab:headline-speedups} reports the cross-method speedups
+The right-hand table in Figure~\ref{fig:headline_dim} reports the cross-method speedups
 of FastGraph at the headline operating point. FastGraph is the
 fastest \emph{exact} GPU $k$NN method at every dimension we measure
 and has a \geoCagra\ geomean advantage over the approximate
@@ -747,7 +743,7 @@ regime and the larger $d{\geq}6$ speedups remain visible.
   \includegraphics[width=0.95\textwidth]{gpu_fgc_k_comparison_1M_d2-10_all_algorithms.png}
   \caption{Speedup at $N{=}1$\,M for $k\in\{10, 40, 100\}$ across
   the full dimensional range. The qualitative pattern of
-  Table~\ref{tab:headline-speedups} is preserved across $k$.}
+  Figure~\ref{fig:headline_dim} is preserved across $k$.}
   \label{fig:k_comparison}
 \end{figure}
 
@@ -774,7 +770,7 @@ optimal on isotropic data.
 \caption{FastGraph speedup over GPU baselines on synthetic Gaussian
 $\mathcal{N}(0, I_d)$ data at $N{=}10^6$, $k{=}40$ (median of
 3 reps, Binary A). The HGCAL detector-data wins at $d \geq 6$
-(Table~\ref{tab:headline-speedups}) are not reproduced on isotropic
+(Figure~\ref{fig:headline_dim}) are not reproduced on isotropic
 data, isolating them to the anisotropic structure of detector
 features rather than a generic property of cell-list binning.}
 \label{tab:synth-dim}
