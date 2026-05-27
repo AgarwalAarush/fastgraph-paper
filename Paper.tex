@@ -249,6 +249,11 @@ dimensional cap because the bin tensor scales as
 $n_{\text{bins}}^d$; beyond $d_{\max}{=}5$, the bin array is
 impractical and the implementation falls back to brute force. This is
 precisely the $d{=}6$--$10$ latent-space regime used by modern GNNs.
+FastGraph's PCA step is therefore not a compression trick but a
+change of binning coordinates: it reduces the search volume while
+leaving every final distance comparison in the original space. That
+separation is what lets the method inherit the pruning behavior of
+cell lists without inheriting their axis-aligned dimensional cap.
 
 FastGraph resolves this cap by binning in the top-$k$ principal
 subspace while retaining full-dimensional distances for candidate
@@ -477,7 +482,10 @@ and yields the next surface bin's flat index. The stepper carries no
 algorithmic role; the kNN guarantee lives in the outer kernel of
 Algorithm~\ref{alg:knn}. Its job is purely to enumerate the projected
 shells in a cache-friendly order so the distance kernel can stay
-focused on the full-dimensional checks.
+focused on the full-dimensional checks. Keeping the shell enumerator
+separate from the distance kernel also makes the projected walk
+event-local: the same row-split offsets and contiguous bin slices can
+be reused across all queries in the batch.
 
 \subsection{Pseudocode}
 
