@@ -167,28 +167,26 @@
             country={Switzerland}}
 
 \begin{abstract}
-We introduce \textbf{FastGraph}, an exact, GPU-resident $k$-nearest-neighbor
-graph-construction primitive designed for the small-dimensional learned
-latent spaces that geometric deep learning models build over irregular
-scientific point clouds. The method binds adaptive spatial binning to
-a partial principal-component projection: points are projected onto the
-top-$k$ principal axes for grid construction and pruning, while exact
-squared-Euclidean distances are evaluated in the full input dimension.
-A short algebraic argument shows that the partial projection is contractive
-and that the standard cube-radius termination test in the projected
-subspace is a valid lower bound on the true-space distance, so the
-returned neighbors are exact at every input dimension we benchmark.
-On a 5\,M-point CMS HGCAL recHit workload with $d{=}8$ and $k{=}40$,
-FastGraph builds the exact kNN graph in \fgcPCADeight, while across
-$d{=}2$--$10$ it achieves geometric-mean speedups of
-\geoCagra--\geoFaiss\ over GPU baselines. Exactness is verified
-bit-identically against a PyTorch brute-force reference across benchmark
-configurations. The library ships a
-\texttt{torch.jit.script}-callable Python entry point with autograd
-support through the selected distances and coordinates, a
-\texttt{GravNetOp} layer combining coordinate transformation, kNN graph
-construction, and message passing, and a GPU-optimized object
-condensation helper kernel.
+Dynamic graph neural networks repeatedly construct $k$-nearest-neighbor
+graphs in learned latent spaces, making exact GPU-resident graph
+construction a central bottleneck for scientific point-cloud workloads.
+We introduce \textbf{FastGraph}, a PyTorch-integrated primitive for exact
+$k$NN graph construction in the small-dimensional regimes used by
+geometric deep learning. The core contribution is a PCA-subspace cell-list
+formulation: FastGraph learns a compact event-wise binning coordinate
+system from the leading principal components, uses that subspace for
+spatial pruning, and evaluates all candidate distances in the original
+feature space. This removes the dimensional cap of axis-aligned cell
+lists while preserving exact neighbor sets, extending uniform-grid
+pruning to the $d{=}4$--$10$ latent spaces used in modern HGCAL
+reconstruction models. The implementation is GPU-resident end to end and
+ships with a scripted Python API, a differentiable \texttt{GravNetOp}
+wrapper, and an object-condensation helper kernel for particle
+reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
+FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
+$k{=}40$, and across $d{=}2$--$10$ achieves geometric-mean speedups of
+\geoCagra--\geoFaiss\ over GPU baselines while retaining exact graph
+topology.
 \end{abstract}
 
 \begin{keyword}
@@ -1161,14 +1159,6 @@ Sections~\ref{sec:synthetic} and~\ref{sec:clover} are generated on the
 fly from fixed random seeds and are fully reproducible from the released
 code. CMS collaboration members can reproduce the HGCAL results
 directly; external parties should contact the corresponding author.
-
-All benchmark timings in this paper come from a single installed
-binary of FastGraph (the canonical \texttt{fgc-fast} environment build,
-CUDA~12.1 toolchain). A separate development build under CUDA~13.2
-shows a $\sim 50\%$ uniform slowdown across both PCA and axis-aligned
-paths that we have isolated to the toolchain transition rather than
-the source---this is a known regression in our build environment and
-does not affect the relative ordering of any result reported here.
 
 \section{Conclusion}
 
