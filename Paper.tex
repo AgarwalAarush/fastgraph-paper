@@ -633,7 +633,7 @@ launch configuration. The empirical optimum on HGCAL data is well
 inside the supported range, so this is not a binding limitation in
 practice.
 
-\paragraph*{Data.}
+\paragraph*{Benchmark data}
 The CMS HGCAL recHit feature dataset comprises \hgcalRecHits\ hits
 concatenated across all events with up to ten spatial and energy
 features per hit. Synthetic comparisons use isotropic Gaussian
@@ -643,19 +643,17 @@ heterogeneous-scale pathology of HGCAL.
 
 \section{Performance Comparisons}
 
-\subsection{Headline: dimensional scaling on detector data}
+\subsection{Headline benchmark: Dimensional scaling on detector data}
 \label{sec:headline}
 
 \begin{figure}[!htbp]
 \centering
-  \begin{minipage}[t]{0.56\textwidth}
-  \vspace{0pt}
+  \begin{minipage}[c]{0.56\textwidth}
   \centering
   \includegraphics[width=\linewidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png}
   \end{minipage}
   \hfill
-  \begin{minipage}[t]{0.42\textwidth}
-  \vspace{0pt}
+  \begin{minipage}[c]{0.42\textwidth}
   \centering
   \scriptsize
   \setlength{\tabcolsep}{1.8pt}
@@ -677,7 +675,7 @@ heterogeneous-scale pathology of HGCAL.
   \bottomrule
   \end{tabular}
   \end{minipage}
-  \caption{Headline detector benchmark at $N{=}5$\,M, $k{=}40$.
+  \caption{Headline benchmark on detector data at $N{=}5$\,M, $k{=}40$.
   Left: dimensional scaling of wall-clock time. FastGraph is the
   fastest exact GPU method across the full $d{=}2$--$10$ range.
   Right: speedups of FastGraph over each backend at the same operating
