@@ -765,7 +765,17 @@ speedup over cuVS BF at $d{=}3$ and a $\spdSynthDfive$ speedup at
 $d{=}5$ (Table~\ref{tab:synth-dim}). As $d$ grows the number of
 neighboring cells grows combinatorially, the binning savings
 collapse, and dense matmul on a well-tuned BLAS path is close to
-optimal on isotropic data.
+optimal on isotropic data. Figure~\ref{fig:synth_summary} shows the
+full dimensional sweep and two dataset-size scans at $d{=}3$ and $d{=}8$.
+
+\begin{figure}[!htbp]
+\centering
+  \includegraphics[width=0.95\textwidth]{synth_summary_gpu.png}
+  \caption{Controlled synthetic Gaussian benchmarks. Top:
+  dimensional scaling at $N{=}1$\,M, $k{=}40$. Bottom:
+  dataset-size scaling at $d{=}3$ and $d{=}8$, $k{=}40$.}
+  \label{fig:synth_summary}
+\end{figure}
 
 \begin{table}[!htbp]
 \centering
@@ -791,17 +801,6 @@ The implication for the paper's main claim is that the HGCAL
 detector wins at $d{=}6$--$10$ (Section~\ref{sec:headline}) come from
 PCA picking up anisotropic structure that does not exist in
 isotropic synthetic data, not from cell-list binning alone.
-Figure~\ref{fig:synth_summary} shows the full dimensional sweep and two
-dataset-size scans at $d{=}3$ and $d{=}8$.
-
-\begin{figure}[!htbp]
-\centering
-  \includegraphics[width=0.95\textwidth]{synth_summary_gpu.png}
-  \caption{Controlled synthetic Gaussian benchmarks. Top:
-  dimensional scaling at $N{=}1$\,M, $k{=}40$. Bottom:
-  dataset-size scaling at $d{=}3$ and $d{=}8$, $k{=}40$.}
-  \label{fig:synth_summary}
-\end{figure}
 
 \subsection{Memory footprint}
 \label{sec:memory}
