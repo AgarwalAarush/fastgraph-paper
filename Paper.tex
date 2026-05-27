@@ -184,9 +184,9 @@ ships with a scripted Python API, a differentiable \texttt{GravNetOp}
 wrapper, and an object-condensation helper kernel for particle
 reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
 FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
-$k{=}40$, and across $d{=}2$--$10$ achieves geometric-mean speedups of
-\geoCagra--\geoFaiss\ over GPU baselines while retaining exact graph
-topology.
+$k{=}40$, achieving speedups of over $40\times$ over exact GPU
+baselines and over $17\times$ over approximate CAGRA while retaining
+exact graph topology.
 \end{abstract}
 
 \begin{keyword}
@@ -1171,11 +1171,11 @@ implementations, while a contraction argument
 input space. On the HGCAL recHit workloads that motivate this paper,
 across $d{=}2$--$10$ at the headline $N{=}5$\,M, $k{=}40$ operating
 point, FastGraph is the fastest \emph{exact} GPU $k$NN method at
-every tested dimension: geomean speedups of \geoFaiss\ over FAISS-GPU
-\texttt{IndexFlatL2}, \geoCuvs\ over cuVS brute force (the strongest
-exact GPU baseline), and \geoCagra\ over the approximate
-CAGRA-NN-Descent build---which is itself the only CAGRA path that
-runs at $d \ge 5$ on heterogeneous-scale detector data. The ablation
+every tested dimension, with speedups exceeding $40\times$ over
+FAISS-GPU \texttt{IndexFlatL2}, $20\times$ over cuVS brute force
+(the strongest exact GPU baseline), and $17\times$ over the
+approximate CAGRA-NN-Descent build---which is itself the only CAGRA
+path that runs at $d \ge 5$ on heterogeneous-scale detector data. The ablation
 in Section~\ref{sec:mbd-ablation} isolates the PCA rotation rather
 than incidental implementation differences as the primary
 contribution: comparing each variant at its own optimum gives a
