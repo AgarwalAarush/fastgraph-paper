@@ -524,6 +524,7 @@ original-space distance computation.
 \label{alg:knn}
 \end{algorithm}
 
+\vspace{-0.6em}
 \subsection{Complexity}
 
 Let $B = n_{\text{bins}}^{k}$ be the size of the bin grid. The PCA
@@ -533,37 +534,30 @@ subspace size $k$, \emph{independently of the input dimension} $d$.
 This is what removes the small-$d$ cap that limited prior cell-list
 GPU $k$NN implementations.
 
-\begin{description}[leftmargin=1.25em,itemindent=0pt,labelsep=0.6em,
-  itemsep=0.45em,topsep=0.35em,font=\normalfont\itshape]
-\item[Setup.]
-Subspace estimation runs a partial eigen-decomposition of $X^\top X$
-at $O(N d^2 + d^3)$, dominated in our regime by the $N d^2$ Gram
-accumulation. Binning, sorting, and offset construction take
-$O(N \log N + B)$.
+\noindent\textit{Setup.} Subspace estimation runs a partial
+eigen-decomposition of $X^\top X$ at $O(N d^2 + d^3)$, dominated in
+our regime by the $N d^2$ Gram accumulation. Binning, sorting, and
+offset construction take $O(N \log N + B)$.
 
-\item[Memory.]
-Auxiliary memory is $O(N(d + k + K) + B)$: sorted coordinates,
-projected coordinates, permutation, neighbor indices, and bin offsets.
+\noindent\textit{Memory.} Auxiliary memory is $O(N(d + k + K) + B)$:
+sorted coordinates, projected coordinates, permutation, neighbor
+indices, and bin offsets.
 
-\item[Per-query search.]
-Under roughly uniform projected-space density, each query examines
-$O(K)$ useful candidates before certifying $r_K$; each candidate costs
-$O(d)$ for the full-dim distance and at most $O(K)$ for the heap
-update, giving expected $O(K(d + K))$ per query. The worst case is the
-degenerate all-points-in-one-bin configuration, which falls back to
-the brute-force $O(N(d + K))$.
+\noindent\textit{Per-query search.} Under roughly uniform
+projected-space density, each query examines $O(K)$ useful candidates
+before certifying $r_K$; each candidate costs $O(d)$ for the full-dim
+distance and at most $O(K)$ for the heap update, giving expected
+$O(K(d + K))$ per query. The worst case is the degenerate
+all-points-in-one-bin configuration, which falls back to the
+brute-force $O(N(d + K))$. In the dynamic-graph setting, the setup
+terms are amortized over the full query sweep on each event, so the
+per-query behavior is the more important operational quantity.
 
-In the dynamic-graph setting, the setup terms are amortized over the
-full query sweep on each event, so the per-query behavior is the more
-important operational quantity.
-
-\item[Parallel cost.]
-With $P$ CUDA threads,
+\noindent\textit{Parallel cost.} With $P$ CUDA threads,
 \[
   \frac{N}{P} \cdot O\!\left(K(d + K)\right)
   \;+\; O\!\left(N d^2 + N \log N + B\right).
 \]
-\end{description}
 
 \subsection{Gradient flow and PyTorch integration}
 
@@ -706,9 +700,9 @@ of FastGraph at the headline operating point. FastGraph is the
 fastest \emph{exact} GPU $k$NN method at every dimension we measure
 and has a \geoCagra\ geomean advantage over the approximate
 CAGRA-NN-Descent build. The GGNN approximate baseline does win on raw
-wall-clock at low $d$, but its much lower recall in matched-recall
-evaluation (Section~\ref{sec:recall}) means the timing should be read
-with that context in mind. The relative advantage is widest in the
+wall-clock at low $d$, but its much lower recall scores in matched-
+recall evaluation (Section~\ref{sec:recall}) mean the timing should be
+read with that context in mind. The relative advantage is widest in the
 $d{=}7$--$10$ regime where dense exact baselines pay the full
 quadratic cost and the approximate baselines have to retain enough
 graph quality to remain useful. Geomean across $d{=}2$--$10$ at this
