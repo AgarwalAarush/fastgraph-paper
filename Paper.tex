@@ -973,26 +973,27 @@ Under this metric FastGraph achieves recall $= 1.0$ across every
 tested configuration ($d \in \{2,\ldots,10\}$, $k_{\text{nn}} \in
 \{10, 40, 100\}$, $N$ up to $5 \times 10^5$). The approximate
 baselines, even at their highest-quality parameter settings, do not
-reach exact recall. Table~\ref{tab:recall} summarises.
+reach exact recall. GGNN is the clearest example: at $d{=}5$ its
+highest-quality setting collapses to roughly $0.03$ recall before
+recovering at higher dimensions. Table~\ref{tab:recall} summarises
+the mean and representative-cell values.
 
 \begin{table}[!htbp]
 \centering
 \caption{Distance-based recall on HGCAL data at the highest-quality
 parameter setting for each backend (\texttt{itopk\_size}$=512$ for
 CAGRA-NN-Descent, $\tau_{\text{query}}=0.8$ for GGNN), under the
-kernel-matched evaluation described in the text. The
-representative cell is $d{=}3$, $N{=}5\times 10^5$, $k_{\text{nn}}{=}40$.
-``$d{=}5$ collapse'' marks the configuration where GGNN's recall falls
-to $\sim 0.03$ even at its highest-quality knob.}
+kernel-matched evaluation described in the text. The representative
+cell is $d{=}3$, $N{=}5\times 10^5$, $k_{\text{nn}}{=}40$.}
 \label{tab:recall}
 \small
-\begin{tabular}{l|ccc}
+\begin{tabular}{l|cc}
 \toprule
-Method & mean over all cells & representative cell & $d{=}5$ collapse \\
+Method & mean over all cells & representative cell \\
 \midrule
-FastGraph (exact)   & $1.000$ & $1.000$ & --- \\
-CAGRA-NN-Descent    & $0.732$ & $0.818$ & --- \\
-GGNN                & $0.666$ & $0.410$ & $0.027$ \\
+FastGraph (exact)   & $1.000$ & $1.000$ \\
+CAGRA-NN-Descent    & $0.732$ & $0.818$ \\
+GGNN                & $0.666$ & $0.410$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1002,9 +1003,8 @@ achieves $99\%$ distance-based recall at $N \ge 5 \times 10^5$ in
 the tested cells; raising their search-quality settings to close
 this gap removes their wall-clock advantage over FastGraph. Second,
 GGNN's highest-quality setting drops sharply at $d{=}5$ before
-recovering at higher dimensions, so we report both the mean and a
-representative deployment cell rather than relying on the aggregate
-alone.
+recovering at higher dimensions, so we call that out in the prose
+rather than dedicating a separate table column to it.
 
 \begin{figure}[!htbp]
 \centering
