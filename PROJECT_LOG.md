@@ -513,3 +513,15 @@ plotting path and paper text to treat FAISS-GPU as exact under its own L2
 kernel, while keeping approximate CAGRA-NN-Descent and GGNN as
 distance-based recall tradeoff baselines. Removed the recall-vs-dimension
 figure from the paper.
+
+## 2026-05-27 — Added GGNN to synthetic Gaussian plots
+
+The paper plot style is now centralized in
+`FastGraph-Plotting/make_paper_plots_v4.py`: FastGraph is red in every
+paper figure, exact dense baselines use green/blue, CAGRA-NN-Descent is
+brown, and GGNN is gray. The synthetic Gaussian plots had no GGNN curve
+because `synth_gpu_baselines.csv` only contained FAISS-GPU, cuVS BF, and
+CAGRA-NN-Descent. Generated a dedicated mps:100 GGNN sweep on the same
+synthetic grid (`N=1M` dimensional sweep plus d=3, d=5, and d=8
+dataset-size scans, `k=40`, 3 reps) and updated the synthetic summary
+plot to include GGNN.
