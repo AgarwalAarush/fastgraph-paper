@@ -1,11 +1,11 @@
-# PAPER_CHANGES.md — Pending v3 edit list
+# PAPER_CHANGES.md — Paper edit and submission-readiness list
 
 Living document. Update as items are landed or rescoped. Items are
 grouped by paper section; the order at the bottom is the execution
 order I'd follow.
 
-Last sync: 2026-05-22 (after Binary A vs B 2x2 settled; CLOVER reframe
-landed as v2; synth Binary A rerun queued as 15702).
+Last sync: 2026-07-24 (full PDF/source/release submission audit
+completed; independent verifier agent findings integrated).
 
 ---
 
@@ -279,3 +279,196 @@ NOTES.md sections that map to v3 items:
 
 Anything in NOTES.md not yet mapped to a paper item → flag here:
 - [ ] None currently flagged. Reaudit on each NOTES.md update.
+
+---
+
+## Q. Submission-readiness audit (2026-07-24)
+
+Verdict: **not ready to submit as-is**. The exact-search method and
+headline speedups remain promising, but the following items must be
+resolved before submission. The current positioning should be
+low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
+`d=4--10`; retain `d=2--3` as inherited axis-aligned boundary controls.
+
+### Q1. Submission blockers
+
+- [ ] Q40. Make the benchmark event-aware. The current loader takes the
+       first `N` rows of a flat 1.158B-hit array, and the runner creates
+       `row_splits=[0,N]`; hits from many events are therefore treated as
+       one graph and cross-event neighbours are permitted. Re-run with
+       valid event boundaries, or state and justify the different task.
+- [ ] Q41. Validate the claimed workload using actual learned latent
+       coordinates from GravNet/HGCAL, preferably at
+       `d={4,6,8,10}`. The current inputs are raw recHit feature columns,
+       not trained latent embeddings, so the manuscript cannot yet claim
+       end-to-end representativeness for dynamic-GNN latent-space kNN.
+- [ ] Q42. Resolve venue and article type before the next formatting
+       pass. The source targets Elsevier Computer Physics Communications
+       (CPC), while project notes also mention ICML. The present
+       16-page, named-author `elsarticle` manuscript is not an ICML
+       submission. For CPC, decide Computational Physics vs Computer
+       Programs in Physics (CPiP); CPiP requires a Program Summary and a
+       complete distributable software package.
+- [ ] Q43. Correct the PCA API and integration claims. The paper's
+       example passes positional argument `3` as `direction`, not
+       `max_bin_dims`; the PCA wrapper is not `@torch.jit.script`; and
+       released `GravNetOp` calls vanilla `binned_select_knn`, not the
+       PCA wrapper. Implement and test the claimed integration or revise
+       the text and example to match released code.
+- [ ] Q44. Publish a submission-grade immutable software artifact.
+       Cite exact tag(s)/commit(s), add the advertised LICENSE file,
+       document PCA installation/API usage, include a sample run and
+       expected output, and add a CITATION/CFF plus archival DOI/PID.
+       The README currently points installation at the upstream fork,
+       says the paper is forthcoming, and advertises an absent license.
+- [ ] Q45. Reconcile the existing FastGraph preprint
+       `arXiv:2511.10442`. If this manuscript supersedes it, upload a
+       revised version; if it is a separate PCA contribution, cite it
+       and clearly distinguish the prior axis-aligned FastGraph work.
+       Do not submit with ambiguous overlap or a renewed "we introduce
+       FastGraph" claim.
+
+### Q2. Experimental validity and reproducibility
+
+- [ ] Q46. Document the recHit feature names, order, units, preprocessing,
+       and normalization. Increasing `d` currently appends particular
+       raw columns, so the `d=5` to `d=6` change may reflect feature
+       identity/scale rather than dimensionality alone.
+- [ ] Q47. Add standardized/whitened HGCAL controls and feature-order or
+       subset controls. PCA on heterogeneous physical units is
+       scale-sensitive; the current result may depend on the chosen
+       units and column ordering.
+- [ ] Q48. Correct the PCA method description. Released code performs
+       one global randomized `torch.pca_lowrank` projection from an
+       unseeded 50k-point subsample, not a deterministic event-wise
+       eigendecomposition. Either implement per-event deterministic PCA
+       or disclose global fitting, subsampling, seed handling, and
+       projection-variability measurements. Use centered
+       `(X-mean)^T(X-mean)` in the mathematics.
+- [ ] Q49. Unify or accurately disclose the timing protocol. PCA and
+       calibration runs used `mps:50`, while later CAGRA/GGNN runs used
+       `mps:100`; the canonical CSVs merge allocations with a
+       drift-aware policy. Prefer a clean canonical rerun under one
+       allocation, otherwise document the merge and calibration.
+- [ ] Q50. Align timed regions across backends or quantify the
+       difference. PCA-FGC receives GPU-resident data before timing,
+       whereas FAISS/cuVS/CAGRA timing includes some host-to-device
+       conversion and/or index setup.
+- [ ] Q51. Regenerate every headline scalar, table, and figure from one
+       immutable aggregation. Current raw medians are approximately
+       PCA-FGC 7.29 s, FAISS 307.19 s, cuVS 146.07 s, CAGRA 126.50 s,
+       and GGNN 13.58 s at `N=5M,d=8,k=40`; several displayed rounded
+       values/speedups derive from older inputs.
+- [ ] Q52. Correct the memory caption/method. The instrumentation
+       subtracts backend-specific output bytes (12 B for
+       FastGraph/FAISS/cuVS, 8 B for CAGRA, 4 B for GGNN), not a common
+       12 B per neighbour for every backend. Explain output-contract
+       differences or normalize them.
+- [ ] Q53. Keep CAGRA's low-recall explanation observational unless a
+       controlled normalization experiment isolates the cause. Add a
+       normalization/metric ablation before recommending a mitigation
+       as established fact.
+- [ ] Q54. Add a phase breakdown supporting "PCA estimation contributes
+       negligibly," or weaken the claim. Add model-level profiling before
+       claiming graph construction frequently dominates full model
+       wall-clock.
+- [ ] Q55. Add end-to-end GravNet/model latency and physics-quality
+       evidence, or narrow the title/abstract/conclusion to exact GPU
+       kNN construction on detector data rather than geometric deep
+       learning broadly.
+- [ ] Q56. Clarify the exactness proof/implementation correspondence:
+       bins use one uniform scalar width across axes, and the stopping
+       rule uses that width. The proof appears sound under the actual
+       uniform-width implementation; avoid describing a different
+       `wMin` construction without justification.
+
+### Q3. Positioning and dimensional scope
+
+- [ ] Q57. Position the novel contribution at `d=4--10`, where
+       `d>max_bin_dims=3`; keep `d=2--3` as controls showing continuity
+       with released axis-aligned FastGraph. Do not describe `d=3` as
+       part of the new PCA benefit, but do not remove it.
+- [ ] Q58. Narrow the application claim to GravNet/HGCAL-style
+       low-to-moderate latent spaces unless higher-dimensional learned
+       embeddings are evaluated. Remove the claim that ParticleNet and
+       EdgeConv operate in the same `d=4--10` window; later dynamic-kNN
+       layers commonly use much wider feature spaces.
+- [ ] Q59. Do not launch a broad high-dimensional campaign yet. First
+       obtain event-aware learned-latent and standardized controls. The
+       existing `d=12` splice pilot can support an appendix only after
+       its feature semantics are validated; the two `d=16` isotropic
+       PCA points lack matching baselines and take about 19.5 min each.
+       Collect real `d=16/32/64` data only if widening the paper beyond
+       its low-dimensional positioning.
+- [ ] Q59a. Curate the currently untracked high-dimensional CSV/log
+       pilots in the Performance repository: either add a documented
+       pilot-data manifest and intentionally exclude them from the paper,
+       or integrate only validated results. Their present untracked state
+       leaves the evaluation provenance ambiguous.
+- [ ] Q60. Mention the completed PCA-LBVH study as future work, if useful:
+       uniform-grid PCA wins in the realistic low-dimensional regime,
+       while LBVH becomes competitive only near `d>=16` or under strong
+       occupancy anisotropy. This also resolves pending item O39.
+
+### Q4. Claims, related work, and references
+
+- [ ] Q61. Soften unsupported exactness motivation. The manuscript has
+       no model study showing approximate neighbours preferentially
+       remove boundary edges, create HGCAL physics systematics, or
+       explain CMS's use of exact kNN. Keep these as plausible risks, or
+       add direct evidence.
+- [ ] Q62. Replace Beyer et al. as the cell-list citation and add the
+       original Verlet/cell-list literature plus a modern GPU
+       neighbour-list reference (for example HOOMD-blue).
+- [ ] Q63. Add formal versioned citations for cuVS and all major
+       software/data artifacts, with DOI/PID where available. Cite
+       foundational PCA/PCA-tree/random-projection work for the
+       currently uncited method-history paragraph.
+- [ ] Q64. Correct bibliography metadata:
+       `sproull1991refinements` is an Algorithmica journal article;
+       the author of `bhattacharya2022gnn` is Saptaparna Bhattacharya;
+       and `qasim2021multiparticle` has a published EPJ Web of
+       Conferences version and DOI.
+- [ ] Q65. Audit newer exact GPU kNN/tree/grid work before claiming
+       related-work coverage. Rephrase categorical statements such as
+       LBVH/ray-tracing methods having "no defined extension" above 3D
+       to the narrower claim actually supported by published
+       implementations/evaluations.
+
+### Q5. Writing, figures, and submission package
+
+- [ ] Q66. Fix the limitations statement that reduced PCA on isotropic
+       data is "essentially a unitary rotation." For `k<d`, it is an
+       arbitrary orthonormal `k`-dimensional projection.
+- [ ] Q67. Decide whether the object-condensation helper appendix is
+       essential. It currently has no evaluation and weakens the focus
+       of a PCA-kNN paper; condense/remove it unless the CPC program
+       article needs the broader library surface.
+- [ ] Q68. Export line/combo plots as vector PDF/EPS, enlarge panel text,
+       legends, and axis labels, and supply figures as separate source
+       files. Current 1600--3000 px PNG plots are below CPC's preferred
+       full-page line-art guidance.
+- [ ] Q69. Reflow floats to reduce large blank regions on pages 9, 12,
+       and 16 and avoid splitting the conclusion awkwardly. Resolve the
+       remaining 1.9 pt overfull box.
+- [ ] Q70. Standardize US/British spelling, punctuation around paragraph
+       headings, terminology, and capitalization. Enable working
+       hyperlinks if allowed by the selected template.
+- [ ] Q71. Complete the venue checklist: Program Summary if CPiP,
+       funding statement, competing-interest declaration, author
+       contributions, data/code availability, corresponding-author
+       details, separate artwork, source archive, and any required
+       highlights.
+
+### Q6. Verified clean items
+
+- [x] Q72. PDF builds to 16 A4 pages with embedded/subset fonts, no Type
+       3 fonts, no undefined citations/references, and only one minor
+       overfull box.
+- [x] Q73. The PCA contraction plus shell-termination exactness argument
+       is consistent with the released uniform-bin-width implementation;
+       no proof-breaking issue was found in this audit.
+- [x] Q74. Source-to-PDF freshness is verified for the audited artifact:
+       `Paper.pdf` was regenerated on 2026-05-29 after the latest
+       `Paper.tex` and bibliography edits and is included in the latest
+       figure-regeneration commit affecting the paper artifact.
