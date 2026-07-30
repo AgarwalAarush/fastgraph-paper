@@ -290,18 +290,22 @@ resolved before submission. The current positioning should be
 low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
 `d=4--10`; retain `d=2--3` as inherited axis-aligned boundary controls.
 
-### Q1. Submission blockers
+### Q1. Submission blockers and explicitly deferred validation
 
-- [ ] Q40. Make the benchmark event-aware. The current loader takes the
+- [>] Q40. Future work: make the benchmark event-aware. The current loader takes the
        first `N` rows of a flat 1.158B-hit array, and the runner creates
        `row_splits=[0,N]`; hits from many events are therefore treated as
        one graph and cross-event neighbours are permitted. Re-run with
        valid event boundaries, or state and justify the different task.
-- [ ] Q41. Validate the claimed workload using actual learned latent
+       Deferred by author decision on 2026-07-30; the paper labels the
+       current measurement a single-segment detector-feature stress test.
+- [>] Q41. Future work: validate the workload using actual learned latent
        coordinates from GravNet/HGCAL, preferably at
        `d={4,6,8,10}`. The current inputs are raw recHit feature columns,
        not trained latent embeddings, so the manuscript cannot yet claim
        end-to-end representativeness for dynamic-GNN latent-space kNN.
+       Deferred by author decision on 2026-07-30; no end-to-end model
+       throughput claim is made in this submission.
 - [ ] Q42. Resolve venue and article type before the next formatting
        pass. The source targets Elsevier Computer Physics Communications
        (CPC), while project notes also mention ICML. The present
@@ -368,7 +372,10 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        conversion and/or index setup.
        The asymmetry is now explicit: FastGraph/GGNN receive GPU-resident
        inputs while FAISS/cuVS/CAGRA include host-to-device transfer.
-       A matched GPU-input rerun remains pending.
+       A matched GPU-input rerun is queued under literal `mps:100` on
+       2026-07-30: headline jobs 28964--28970 run first, followed by the
+       remaining paper-grid jobs 28971--28975. Production depends on the
+       five-backend zero-copy smoke chain 28959--28963.
 - [x] Q51. Regenerate every headline scalar, table, and figure from one
        immutable aggregation. Current raw medians are approximately
        PCA-FGC 7.29 s, FAISS 307.19 s, cuVS 146.07 s, CAGRA 126.50 s,

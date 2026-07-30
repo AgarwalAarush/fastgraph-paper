@@ -547,3 +547,24 @@ wrapper itself is `@torch.jit.script` decorated. Also disclosed the actual
 one-projection-per-call 50k-row randomized PCA fit and the mixed benchmark
 allocation/timed-region provenance. A canonical one-allocation rerun and
 event-aware learned-latent evaluation remain outstanding.
+
+## 2026-07-30 — Matched GPU-input mps:100 campaign queued
+
+Implemented a separate benchmark path in `Performance` that preloads every
+input as a Torch CUDA tensor before timing. FastGraph and GGNN consume that
+tensor directly; FAISS uses its Torch bridge; cuVS brute force and CAGRA use
+a pointer-identical CuPy DLPack view created before the timer. The measured
+region includes index/build and query/search for every backend and excludes
+data loading and host-to-device transfer for every backend.
+
+A five-backend smoke chain (jobs 28959--28963) validates the adapters. The
+production chain uses `qos=heavy`, literal `gres/mps:100`, four-hour bounded
+jobs, and strict `afterok` serialization. Headline `N=5M,k=40,d=2--10`
+jobs 28964--28970 run first; remaining paper-grid jobs 28971--28975 follow.
+The full chain is recorded in
+`Performance/matched_input_campaign_jobs.txt`.
+
+By author decision, event-aware learned HGCAL coordinates are deferred to
+future work and are not a blocker for this submission. The manuscript keeps
+the current data labeled as a single-segment detector-feature kernel stress
+test and makes no end-to-end model-throughput claim.

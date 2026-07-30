@@ -1172,7 +1172,9 @@ size and the spatial density seen by a cell list. Likewise, the benchmark
 features are detector-derived inputs, not embeddings sampled from a
 trained model. Event-batched timings and learned-latent coordinates are
 therefore required before extrapolating the reported speedups to
-end-to-end training throughput. Extending the evaluated input dimension
+end-to-end training throughput. We defer those model-level measurements
+to future work and make no end-to-end throughput claim here. Extending
+the evaluated input dimension
 beyond $d{=}10$ is secondary to those two validation steps;
 higher-dimensional feature-space graph layers remain outside the present
 claim. A projected-space LBVH is another possible extension when uniform
