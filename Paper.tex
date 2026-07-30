@@ -171,17 +171,17 @@ Dynamic graph neural networks repeatedly construct $k$-nearest-neighbor
 graphs in learned latent spaces, making exact GPU-resident graph
 construction a central bottleneck for scientific point-cloud workloads.
 We introduce \textbf{FastGraph}, a PyTorch-integrated primitive for exact
-$k$NN graph construction in the small-dimensional regimes used by
-geometric deep learning. The core contribution is a PCA-subspace cell-list
-formulation: FastGraph learns a compact event-wise binning coordinate
-system from the leading principal components, uses that subspace for
+$k$NN graph construction in low-to-moderate-dimensional learned spaces.
+The core contribution is a PCA-subspace cell-list formulation: FastGraph
+fits a compact binning coordinate system to the input coordinate tensor
+and uses that subspace for
 spatial pruning, and evaluates all candidate distances in the original
 feature space. This removes the dimensional cap of axis-aligned cell
 lists while preserving exact neighbor sets, extending uniform-grid
 pruning to the $d{=}4$--$10$ latent spaces used in modern HGCAL
 reconstruction models. The implementation is GPU-resident end to end and
-ships with a scripted Python API, a differentiable \texttt{GravNetOp}
-wrapper, and an object-condensation helper kernel for particle
+ships with an eager-mode PCA API, an opt-in differentiable
+\texttt{GravNetOp} integration, and an object-condensation helper kernel for particle
 reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
 FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
 $k{=}40$, achieving speedups of up to $40\times$ over the exact GPU
@@ -208,13 +208,15 @@ The dynamic kNN-graph layer is therefore on the critical path of
 every forward and backward pass; its construction cost frequently
 dominates the model's wall-clock budget once the latent dimensionality
 is anything other than two or three. Importantly, the latent
-dimensionality in practice is small but not trivially so: the original
+dimensionality in the target application is small but not trivially so: the original
 GravNet layer for HGCAL reconstruction~\cite{Qasim2019GravNet} uses
 $d{=}4$ for the learned space in which the kNN is taken, and recent
 multi-particle and object-condensation variants used in CMS HGCAL
 reconstruction~\cite{Kieseler2020ObjectCondensation,qasim2021multiparticle,bhattacharya2022gnn}
 sit in the $d{=}4$--$10$ range. EdgeConv~\cite{wang2019dynamic} and
-ParticleNet~\cite{qu2020particlenet} are in the same window. This
+ParticleNet~\cite{qu2020particlenet} also rebuild feature-space graphs,
+but later layers may operate at substantially higher dimensionality and
+are outside the primary regime evaluated here. This
 \emph{small-but-not-tiny} regime is precisely where neither generic
 high-dimensional ANN libraries nor brute-force GPU $k$NN are an ideal
 fit: ANN libraries introduce unfavorable overheads, and brute force
@@ -248,7 +250,7 @@ the visited bins. Prior axis-aligned GPU cell lists hit a hard
 dimensional cap because the bin tensor scales as
 $n_{\text{bins}}^d$; beyond $d_{\max}{=}5$, the bin array is
 impractical and the implementation falls back to brute force. This is
-precisely the $d{=}6$--$10$ latent-space regime used by modern GNNs.
+the low-to-moderate-dimensional regime targeted here.
 FastGraph's PCA step is therefore not a compression trick but a
 change of binning coordinates: it reduces the search volume while
 leaving every final distance comparison in the original space. That
@@ -260,7 +262,9 @@ subspace while retaining full-dimensional distances for candidate
 evaluation. Since the partial projection
 $V_k V_k^\top \preceq I_d$ is contractive, projected-space
 termination remains a valid lower bound on true-space distance, so
-the algorithm is exact at every input dimension. At $d{=}8$,
+the algorithm is exact at every input dimension. The new PCA path is
+evaluated at $d{=}4$--$10$; $d{=}2$--$3$ are axis-aligned controls for
+which the implementation short-circuits before PCA. At $d{=}8$,
 $N{=}5$\,M, $k{=}40$, FastGraph builds the kNN graph in
 \fgcPCADeight\ versus \faissDeight\ for exact FAISS-GPU,
 \cuvsBFDeight\ for cuVS brute force, and \cagraNNDDeight\ for
@@ -268,16 +272,15 @@ CAGRA's approximate NN-Descent build. Across $d{=}2$--$10$ at this
 $(N,k)$ point, geomean speedups are \geoFaiss, \geoCuvs, and
 \geoCagra\ respectively.
 
-The library is shipped as a PyTorch extension: the primary entry
-point is a \texttt{@torch.jit.script}-decorated function callable
-from inside other scripted modules without graph-capture overhead,
-and gradients flow through the continuous outputs of the kernel
+The library is shipped as a PyTorch extension. The axis-aligned primitive
+remains callable from TorchScript, while the PCA wrapper uses eager-mode
+\texttt{torch.pca\_lowrank}. Gradients flow through the continuous outputs of the kernel
 (selected squared distances, query coordinates) while the hard
 neighbor indices are treated as constants in the backward pass.
-\texttt{GravNetOp}~\cite{Qasim2019GravNet} and a GPU-resident object
-condensation helper~\cite{Kieseler2020ObjectCondensation} are
-provided as production wrappers; the latter is described in the
-appendix.
+\texttt{GravNetOp}~\cite{Qasim2019GravNet} exposes PCA-subspace neighbor
+selection through \texttt{use\_pca=True} in eager mode. A GPU-resident
+object-condensation helper~\cite{Kieseler2020ObjectCondensation} is also
+provided and described in the appendix.
 
 \section{Related Work}
 \label{sec:related-work}
@@ -343,7 +346,7 @@ that RT cores build BVHs only on three-dimensional data, CLOVER's
 reference implementation asserts \texttt{D == 3}, and LBVH-kNN is
 evaluated exclusively in 3D. We include a direct head-to-head against
 CLOVER at $d{=}3$ in Section~\ref{sec:clover}, but these methods do
-not cover the $d{=}5$--$10$ latent-space workload targeted here.
+not cover the $d{=}4$--$10$ latent-space workload targeted here.
 
 \paragraph*{Approximate GPU $k$NN.}
 A parallel body of work has produced GPU-resident approximate nearest
@@ -385,18 +388,20 @@ inside such models---not a new model class.
 \label{sec:phase1}
 
 Given the input coordinates
-$X \in \mathbb{R}^{N \times d}$ for the current event (or mini-batch),
-FastGraph computes the top-$k$ principal axes via a partial eigen-
-decomposition of the centered covariance $X^\top X$. The number of
+$X \in \mathbb{R}^{N \times d}$ for the current call, FastGraph samples
+up to 50,000 rows, centers that sample, and computes the top-$k$ principal
+axes with \texttt{torch.pca\_lowrank}. The current release fits one
+projection for the complete coordinate tensor rather than a separate
+projection for each \texttt{row\_splits} segment. The number of
 binning axes $k$ is a user-facing hyperparameter; we default to
 $k = \mbdPCAdefault$ for the HGCAL workloads in this paper, justified
 empirically in the ablation of Section~\ref{sec:mbd-ablation}. The
 resulting projection matrix $V_k \in \mathbb{R}^{d \times k}$
 satisfies $V_k^\top V_k = I_k$ and $V_k V_k^\top \preceq I_d$. The
 projected coordinates used for binning are $Y = X V_k$. PCA estimation
-is performed once per event on the GPU using the underlying BLAS
-implementation and contributes negligibly to the wall-clock budget
-relative to the per-query search.
+is performed once per call on the GPU and is included in the reported
+FastGraph timing. The random subsample follows PyTorch's active random
+number-generator state.
 
 \paragraph*{Short-circuit at $d \le k$.}
 When the input dimensionality $d$ does not exceed the binning
@@ -583,13 +588,13 @@ naturally into existing GNN autograd graphs. Treating $V_k$ as
 fixed per forward+backward pass keeps the gradients deterministic
 within a step; the projection is refreshed at the next forward.
 
-The user-facing entry point is decorated with
-\texttt{@torch.jit.script}, so it can be called from within other
-scripted modules without graph-capture overhead. A minimal usage
-example:
+The PCA entry point is an eager-mode Python wrapper around the scripted
+axis-aligned primitive and the custom CUDA operation. A minimal usage
+example is:
 
-\begin{lstlisting}[language=Python, caption={Minimal FastGraph usage inside a \texttt{torch.jit.script} module.}]
-from fastgraphcompute import binned_select_knn_pca  # @torch.jit.script decorated
+\begin{lstlisting}[language=Python, caption={Minimal eager-mode PCA-FastGraph usage.}]
+from fastgraphcompute import binned_select_knn_pca
+from fastgraphcompute.gnn_ops import GravNetOp
 
 # Direct call (eager mode)
 idx, dist2 = binned_select_knn_pca(K=40, coords=x, row_splits=rs,
@@ -599,11 +604,11 @@ idx, dist2 = binned_select_knn_pca(K=40, coords=x, row_splits=rs,
 loss = model(dist2).sum()
 loss.backward()  # gradients flow through dist2 to x
 
-# Inside a scripted module
-@torch.jit.script
-def build_graph(x: torch.Tensor, rs: torch.Tensor) -> torch.Tensor:
-    idx, dist2 = binned_select_knn_pca(40, x, rs, 3)
-    return dist2
+# Opt-in PCA neighbor construction inside GravNetOp (eager mode)
+layer = GravNetOp(in_channels=16, out_channels=32,
+                  space_dimensions=8, propagate_dimensions=32,
+                  k=40, use_pca=True, max_bin_dims=3)
+out, idx, dist2, space = layer(features, rs)
 \end{lstlisting}
 
 \section{Experimental Setup}
@@ -617,16 +622,20 @@ All GPU experiments use a single NVIDIA A100 80\,GB PCIe with CUDA
 compiled from the public release.
 
 \paragraph*{Timing protocol.}
-Timing runs use a full A100 allocation through
-\texttt{--gres=mps:100}; NVIDIA's Multi-Process Service (MPS) is the
-GPU sharing layer used here, so the job receives the whole device via
-that path rather than a smaller fractional allocation. All timed
-regions are bracketed by
-\texttt{torch.cuda.synchronize()} calls on the active CUDA stream,
-after warm-up for memory allocation and JIT compilation. Figures and
+The benchmark archive contains three Slurm allocation modes. PCA-FastGraph
+and its cross-allocation calibration cells were collected with
+\texttt{--gres=mps:50}; the later full CAGRA-NN-Descent and GGNN sweeps
+used \texttt{--gres=mps:100}; and some legacy exact-baseline cells used
+an exclusive \texttt{--gres=gpu:1} allocation. Jobs used for latency
+comparisons were serialized to avoid MPS contention, and calibration
+cells were used to identify allocation-sensitive or contaminated runs.
+All timed regions are bracketed by device synchronization. The FastGraph
+timer receives GPU-resident coordinates, whereas the FAISS, cuVS, and
+CAGRA runners begin with NumPy input and include device conversion, index
+construction, and search. Reported values are therefore runner-level graph
+construction times rather than kernel-only measurements. Figures and
 scalar comparisons report medians across successful repetitions; error
-bars show the interquartile range when repeated measurements are
-available.
+bars show the interquartile range when repeated measurements are available.
 
 \paragraph*{CAGRA build path.}
 CAGRA's default IVF-PQ build path fails on HGCAL data at $d \ge 5$
@@ -1053,11 +1062,11 @@ graph in a learned latent space at every forward pass, so the
 kNN substrate is on the gradient path of every training step.
 FastGraph integrates into this setting through \texttt{GravNetOp}, a
 PyTorch module that wraps coordinate transformation, kNN graph
-construction (via the PCA-subspace primitive of
+construction (via the opt-in \texttt{use\_pca=True} PCA-subspace path of
 Section~\ref{sec:method}), and message passing into a single
 autograd-compatible operation. Gradients flow through the selected
 distances and the input coordinates; the discrete neighbor indices
-and the per-event projection $V_k$ are held fixed across the
+and the per-call projection $V_k$ are held fixed across the
 forward-backward pair so that the gradients are deterministic within
 a step. Object condensation~\cite{Kieseler2020ObjectCondensation},
 which is the loss used together with GravNet for HGCAL
@@ -1082,8 +1091,8 @@ pairwise-distance variance the leading components actually capture.
 On strongly anisotropic data---HGCAL recHits, anything with a few
 dominant axes---FastGraph's PCA-subspace binning is substantially
 faster than axis-aligned cell lists (Section~\ref{sec:mbd-ablation},
-geomean speedups in Section~\ref{sec:headline}). On isotropic data,
-the projection is essentially a unitary rotation and FastGraph
+geomean speedups in Section~\ref{sec:headline}). On isotropic data, the
+leading subspace is an arbitrary orthonormal $k$-dimensional projection and FastGraph
 degrades gracefully toward ordinary cell-list behavior; in that regime
 FastGraph outperforms dense GPU brute force
 only while the cell-list pruning advantage outweighs the constant
@@ -1198,10 +1207,10 @@ and axis-aligned binning at $d{=}8$, $N{=}5$\,M, $k{=}40$.
 
 This paper does not claim that FastGraph is the fastest GPU $k$NN on
 every distribution or every dimensionality. Two boundaries of the
-claim are documented. First, the deployment regime for the dynamic
-graph layers FastGraph targets is the $d{=}4$--$10$ learned latent
-space used by GravNet, ParticleNet, and HGCAL multi-particle
-reconstruction; the 3D-only spatial-acceleration methods (CLOVER,
+claim are documented. First, the deployment regime targeted and measured
+here is the $d{=}4$--$10$ learned latent space used by GravNet and HGCAL
+multi-particle reconstruction; wider feature-space graph layers require
+separate evaluation. The 3D-only spatial-acceleration methods (CLOVER,
 LBVH, RT-cores) are unavailable in the $d \ge 4$ regime by
 construction, and at the largest $d{=}3$ HGCAL head-to-head point
 ($N{=}5$\,M, $k{=}40$), the CLOVER spatio-graph index is about

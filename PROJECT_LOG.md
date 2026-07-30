@@ -525,3 +525,25 @@ CAGRA-NN-Descent. Generated a dedicated mps:100 GGNN sweep on the same
 synthetic grid (`N=1M` dimensional sweep plus d=3, d=5, and d=8
 dataset-size scans, `k=40`, 3 reps) and updated the synthetic summary
 plot to include GGNN.
+
+## 2026-07-30 — Low-dimensional positioning and GravNet PCA integration
+
+Narrowed the paper's measured contribution to exact GPU kNN for
+low-to-moderate-dimensional GravNet/HGCAL spaces. The PCA contribution is
+now stated as `d=4--10`; `d=2--3` remain axis-aligned controls that
+short-circuit before PCA. Removed the unsupported claim that ParticleNet
+and EdgeConv occupy the same dimensional window.
+
+The public `FastGraphCompute` paper-release tree and the active
+`FastGraphCompute-dev` tree now expose an opt-in
+`GravNetOp(..., use_pca=True, max_bin_dims=3)` eager path. The default
+axis-aligned path remains unchanged and TorchScript-compatible because the
+PCA wrapper relies on eager-only `torch.pca_lowrank`. Focused dispatch and
+TorchScript regression tests passed, followed by a real CUDA eager-mode
+smoke test through the PCA wrapper and custom kernel.
+
+Corrected the manuscript's API example and removed claims that the PCA
+wrapper itself is `@torch.jit.script` decorated. Also disclosed the actual
+one-projection-per-call 50k-row randomized PCA fit and the mixed benchmark
+allocation/timed-region provenance. A canonical one-allocation rerun and
+event-aware learned-latent evaluation remain outstanding.

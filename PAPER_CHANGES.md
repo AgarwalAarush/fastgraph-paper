@@ -309,12 +309,16 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        submission. For CPC, decide Computational Physics vs Computer
        Programs in Physics (CPiP); CPiP requires a Program Summary and a
        complete distributable software package.
-- [ ] Q43. Correct the PCA API and integration claims. The paper's
+- [x] Q43. Correct the PCA API and integration claims. The paper's
        example passes positional argument `3` as `direction`, not
        `max_bin_dims`; the PCA wrapper is not `@torch.jit.script`; and
        released `GravNetOp` calls vanilla `binned_select_knn`, not the
        PCA wrapper. Implement and test the claimed integration or revise
        the text and example to match released code.
+       Completed 2026-07-30: `GravNetOp` now exposes an opt-in
+       `use_pca=True` eager path with dispatch and CUDA smoke coverage;
+       the paper and README accurately preserve the scriptable
+       axis-aligned default and describe PCA as eager-only.
 - [ ] Q44. Publish a submission-grade immutable software artifact.
        Cite exact tag(s)/commit(s), add the advertised LICENSE file,
        document PCA installation/API usage, include a sample run and
@@ -338,22 +342,30 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        subset controls. PCA on heterogeneous physical units is
        scale-sensitive; the current result may depend on the chosen
        units and column ordering.
-- [ ] Q48. Correct the PCA method description. Released code performs
+- [~] Q48. Correct the PCA method description. Released code performs
        one global randomized `torch.pca_lowrank` projection from an
        unseeded 50k-point subsample, not a deterministic event-wise
        eigendecomposition. Either implement per-event deterministic PCA
        or disclose global fitting, subsampling, seed handling, and
        projection-variability measurements. Use centered
        `(X-mean)^T(X-mean)` in the mathematics.
-- [ ] Q49. Unify or accurately disclose the timing protocol. PCA and
+       The global 50k-row subsample, `torch.pca_lowrank`, active PyTorch
+       RNG state, and one-projection-per-call behavior are now disclosed;
+       per-segment PCA and variability measurements remain pending.
+- [~] Q49. Unify or accurately disclose the timing protocol. PCA and
        calibration runs used `mps:50`, while later CAGRA/GGNN runs used
        `mps:100`; the canonical CSVs merge allocations with a
        drift-aware policy. Prefer a clean canonical rerun under one
        allocation, otherwise document the merge and calibration.
-- [ ] Q50. Align timed regions across backends or quantify the
+       The mixed `mps:50`/`mps:100`/`gpu:1` provenance and calibration
+       are now disclosed. A one-allocation canonical rerun remains the
+       preferred final resolution.
+- [x] Q50. Align timed regions across backends or quantify the
        difference. PCA-FGC receives GPU-resident data before timing,
        whereas FAISS/cuVS/CAGRA timing includes some host-to-device
        conversion and/or index setup.
+       Completed by explicit disclosure in the timing protocol; a
+       future kernel-only comparison would be supplementary.
 - [ ] Q51. Regenerate every headline scalar, table, and figure from one
        immutable aggregation. Current raw medians are approximately
        PCA-FGC 7.29 s, FAISS 307.19 s, cuVS 146.07 s, CAGRA 126.50 s,
@@ -384,11 +396,11 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
 
 ### Q3. Positioning and dimensional scope
 
-- [ ] Q57. Position the novel contribution at `d=4--10`, where
+- [x] Q57. Position the novel contribution at `d=4--10`, where
        `d>max_bin_dims=3`; keep `d=2--3` as controls showing continuity
        with released axis-aligned FastGraph. Do not describe `d=3` as
        part of the new PCA benefit, but do not remove it.
-- [ ] Q58. Narrow the application claim to GravNet/HGCAL-style
+- [x] Q58. Narrow the application claim to GravNet/HGCAL-style
        low-to-moderate latent spaces unless higher-dimensional learned
        embeddings are evaluated. Remove the claim that ParticleNet and
        EdgeConv operate in the same `d=4--10` window; later dynamic-kNN
@@ -437,7 +449,7 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
 
 ### Q5. Writing, figures, and submission package
 
-- [ ] Q66. Fix the limitations statement that reduced PCA on isotropic
+- [x] Q66. Fix the limitations statement that reduced PCA on isotropic
        data is "essentially a unitary rotation." For `k<d`, it is an
        arbitrary orthonormal `k`-dimensional projection.
 - [ ] Q67. Decide whether the object-condensation helper appendix is
