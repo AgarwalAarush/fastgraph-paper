@@ -73,23 +73,23 @@
 \newcommand{\spdHGCALdfour}{2.30\ensuremath{\times}}
 \newcommand{\spdHGCALdfive}{3.09\ensuremath{\times}}
 \newcommand{\spdHGCALdsix}{10.51\ensuremath{\times}}
-\newcommand{\spdHGCALdseven}{35.23\ensuremath{\times}}
-\newcommand{\spdHGCALdeight}{42.46\ensuremath{\times}}
-\newcommand{\spdHGCALdnine}{32.68\ensuremath{\times}}
-\newcommand{\spdHGCALdten}{29.83\ensuremath{\times}}
+\newcommand{\spdHGCALdseven}{32.50\ensuremath{\times}}
+\newcommand{\spdHGCALdeight}{42.01\ensuremath{\times}}
+\newcommand{\spdHGCALdnine}{31.85\ensuremath{\times}}
+\newcommand{\spdHGCALdten}{34.55\ensuremath{\times}}
 
 % vs cuVS brute force (strongest exact GPU baseline)
 \newcommand{\spdHGCALcuvsdtwo}{1.65\ensuremath{\times}}
 \newcommand{\spdHGCALcuvsdfive}{1.48\ensuremath{\times}}
 \newcommand{\spdHGCALcuvsdsix}{4.92\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdeight}{20.15\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdten}{14.31\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdeight}{19.97\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdten}{16.58\ensuremath{\times}}
 
 % vs CAGRA-NN-Descent (approximate GPU baseline, after IVF-PQ fix)
 \newcommand{\spdHGCALcagradtwo}{1.45\ensuremath{\times}}
 \newcommand{\spdHGCALcagradsix}{4.40\ensuremath{\times}}
-\newcommand{\spdHGCALcagradeight}{17.36\ensuremath{\times}}
-\newcommand{\spdHGCALcagradten}{13.67\ensuremath{\times}}
+\newcommand{\spdHGCALcagradeight}{17.30\ensuremath{\times}}
+\newcommand{\spdHGCALcagradten}{14.07\ensuremath{\times}}
 
 % Geomeans across d=2-10 at N=5M, k=40
 \newcommand{\geoFaiss}{10.1\ensuremath{\times}}
@@ -97,8 +97,8 @@
 \newcommand{\geoCagra}{4.3\ensuremath{\times}}
 
 % Reference-cell wall-clocks at d=8, N=5M, k=40
-\newcommand{\fgcPCADeight}{7.2\,s}
-\newcommand{\faissDeight}{306\,s}
+\newcommand{\fgcPCADeight}{7.3\,s}
+\newcommand{\faissDeight}{307\,s}
 \newcommand{\cuvsBFDeight}{146\,s}
 \newcommand{\cagraNNDDeight}{127\,s}
 
@@ -168,32 +168,67 @@
 
 \begin{abstract}
 Dynamic graph neural networks repeatedly construct $k$-nearest-neighbor
-graphs in learned latent spaces, making exact GPU-resident graph
-construction a central bottleneck for scientific point-cloud workloads.
-We introduce \textbf{FastGraph}, a PyTorch-integrated primitive for exact
+graphs in learned latent spaces, making GPU-resident graph construction
+an important operation in scientific point-cloud workloads.
+We extend \textbf{FastGraph}, a PyTorch-integrated primitive for exact
 $k$NN graph construction in low-to-moderate-dimensional learned spaces.
 The core contribution is a PCA-subspace cell-list formulation: FastGraph
 fits a compact binning coordinate system to the input coordinate tensor
 and uses that subspace for
 spatial pruning, and evaluates all candidate distances in the original
-feature space. This removes the dimensional cap of axis-aligned cell
-lists while preserving exact neighbor sets, extending uniform-grid
-pruning to the $d{=}4$--$10$ latent spaces used in modern HGCAL
-reconstruction models. The implementation is GPU-resident end to end and
+feature space. This replaces the fixed coordinate-axis binning of the original
+FastGraph method with a data-adaptive orthonormal subspace while preserving
+exact neighbor sets, improving uniform-grid pruning in the $d{=}4$--$10$
+regime targeted by modern HGCAL reconstruction models. The implementation is GPU-resident end to end and
 ships with an eager-mode PCA API, an opt-in differentiable
 \texttt{GravNetOp} integration, and an object-condensation helper kernel for particle
 reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
 FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
-$k{=}40$, achieving speedups of up to $40\times$ over the exact GPU
-baselines and over $17\times$ over approximate CAGRA while retaining
+$k{=}40$, achieving speedups of up to $42\times$ over FAISS-GPU,
+$20\times$ over cuVS brute force, and $17\times$ over approximate
+CAGRA while retaining
 exact neighbor sets under the paper's distance-based convention.
 \end{abstract}
 
 \begin{keyword}
-Graph Neural Networks \sep $k$-Nearest Neighbors \sep GPU Acceleration \sep CUDA \sep PCA \sep Object Condensation \sep Particle Physics \sep Differentiable Computing
+Graph Neural Networks \sep $k$-Nearest Neighbors \sep GPU Acceleration \sep CUDA \sep PCA \sep Object Condensation \sep Particle Physics
 \end{keyword}
 
 \end{frontmatter}
+
+\section*{Program Summary}
+\begin{description}[style=nextline,leftmargin=0pt,labelindent=0pt,labelwidth=0pt,labelsep=0pt]
+\item[Program title:] FastGraphCompute
+\item[CPC Library link to program files:] To be added by the Technical Editor
+\item[Developer's repository link:] \url{https://github.com/AgarwalAarush/FastGraphCompute}
+\item[Licensing provisions:] MIT License
+\item[Programming language:] Python, C++, CUDA
+\item[Supplementary material:] Source archive, installation instructions,
+tests, and executable examples
+\item[Nature of problem:]
+Dynamic graph neural networks repeatedly construct $k$-nearest-neighbor
+graphs from GPU-resident coordinate tensors. Exact dense methods require
+quadratic distance work, while classical cell-list implementations become
+impractical when their uniform grid spans too many input dimensions. The
+target is exact graph construction for ragged, low-to-moderate-dimensional
+point sets without materializing the full pairwise distance matrix.
+\item[Solution method:]
+FastGraphCompute estimates a compact principal-component subspace and
+uses it only to assign points to a uniform grid and prune unvisited bins.
+Candidate distances are evaluated in the original coordinate space. Since
+the orthonormal partial projection is contractive, the projected-space
+stopping condition remains a valid lower bound on full-space distance.
+The implementation is exposed as a PyTorch CUDA extension with eager-mode
+PCA and optional integration into \texttt{GravNetOp}.
+\item[Restrictions and unusual features:]
+The released PCA path requires an NVIDIA GPU, CUDA 12.1, and PyTorch 2.5;
+it currently targets a single GPU and uses eager mode because
+\texttt{torch.pca\_lowrank} is not TorchScript compatible. The CUDA release
+instantiates two through five binning dimensions. Neighbor indices are
+discrete; gradients are provided through the selected squared distances
+and input coordinates. Performance depends on projected-space density,
+and the worst case approaches brute force.
+\end{description}
 
 \section{Introduction}
 
@@ -205,9 +240,10 @@ A defining architectural choice in many modern GNNs is that the graph
 itself is built at training time, from a learned latent embedding, by
 a $k$-nearest-neighbor query.
 The dynamic kNN-graph layer is therefore on the critical path of
-every forward and backward pass; its construction cost frequently
-dominates the model's wall-clock budget once the latent dimensionality
-is anything other than two or three. Importantly, the latent
+every forward and backward pass, and its construction cost can be a
+substantial component of a model step. Establishing that fraction for
+the target HGCAL models requires end-to-end profiling and is outside
+the kernel study reported here. Importantly, the latent
 dimensionality in the target application is small but not trivially so: the original
 GravNet layer for HGCAL reconstruction~\cite{Qasim2019GravNet} uses
 $d{=}4$ for the learned space in which the kNN is taken, and recent
@@ -224,40 +260,32 @@ scales as $N^2 d$ regardless of how much spatial structure the latent
 embedding contains.
 
 \paragraph*{Why exact $k$NN matters in this regime.}
-For scientific workloads where the underlying topology must be
-faithfully recovered, the dynamic-graph layer must also be exact, not
-just high-recall. In CMS HGCAL shower reconstruction the neighbors
-that just-barely-fall inside or outside the $k$th-nearest cut are
-the structurally informative edges---points that separate one shower
-from a neighboring shower. An approximate backend at $\text{recall}{=}0.9$
-does not lose 10\% of arbitrary edges; it preferentially loses the
-boundary edges that the GNN most needs, and the loss varies
-non-deterministically across reruns. This introduces a
-recall-dependent systematic into training gradients (the dynamic
-graph fluctuates from epoch to epoch in a way that's a function of
-the index implementation, not the data) and into inference
-(downstream physics observables---cluster energy, shower
-identification---become a function of which neighbors the
-approximate index happened to return). This is why CMS HGCAL
-reconstruction pipelines use exact $k$NN in the dynamic-graph layer
-even when faster approximate alternatives are available.
+Exact $k$NN provides a reproducible graph definition without an
+index-specific recall target or quality hyperparameter. Approximate
+construction changes the selected edge set, and graph-learning studies
+show that edge perturbations can alter downstream predictions
+substantially~\cite{zugner2018adversarial,klicpera2019diffusion}.
+The present work does not establish that approximate-$k$NN errors
+produce a measurable HGCAL physics systematic; that question requires
+an end-to-end model study. We instead evaluate the narrower engineering
+case for exact construction when it is competitive in the target
+low-to-moderate-dimensional regime.
 
 The classical low-dimensional accelerator for this regime is the
-\emph{cell list}~\cite{beyer1999nearest}: place points in a uniform
+\emph{cell list}~\cite{verlet1967,howard2016neighbor}: place points in a uniform
 grid, expand neighboring bins around each query until the best-$k$
 radius is certified, and evaluate distances only for candidates in
-the visited bins. Prior axis-aligned GPU cell lists hit a hard
-dimensional cap because the bin tensor scales as
-$n_{\text{bins}}^d$; beyond $d_{\max}{=}5$, the bin array is
-impractical and the implementation falls back to brute force. This is
-the low-to-moderate-dimensional regime targeted here.
-FastGraph's PCA step is therefore not a compression trick but a
-change of binning coordinates: it reduces the search volume while
-leaving every final distance comparison in the original space. That
-separation is what lets the method inherit the pruning behavior of
-cell lists without inheriting their axis-aligned dimensional cap.
+the visited bins. A full $d$-dimensional grid scales as
+$n_{\text{bins}}^d$, so practical GPU implementations limit the binning
+grid to a small $k$ even when the input has $d>k$ coordinates. The
+original FastGraph preprint~\cite{agarwal2025fastgraph} handled this case
+by binning on the first $k$ input axes while evaluating distances in all
+$d$ dimensions. That choice supports $d>k$, but its pruning quality
+depends on feature order and scale.
 
-FastGraph resolves this cap by binning in the top-$k$ principal
+The new PCA step is therefore not a compression trick or the first support
+for $d>5$; it is a data-adaptive choice of binning coordinates. FastGraph
+now bins in the top-$k$ principal
 subspace while retaining full-dimensional distances for candidate
 evaluation. Since the partial projection
 $V_k V_k^\top \preceq I_d$ is contractive, projected-space
@@ -296,7 +324,11 @@ work; KeOps~\cite{feydy2020fast} provides symbolic matrix reductions
 with automatic differentiation that can express exact $k$NN without
 materializing the full distance matrix. Direct exact GPU $k$NN-graph
 construction has also been studied in the multi-GPU and cluster
-settings~\cite{dashti2013efficient,komarov2014fast}. FastGraph is not
+settings~\cite{dashti2013efficient,komarov2014fast}. PyTorch Geometric
+exposes the widely used \texttt{knn\_graph} interface through its
+\texttt{torch\_cluster} extension~\cite{fey2019pyg}; we treat it as a
+framework interface rather than a distinct algorithmic baseline.
+FastGraph is not
 the first exact GPU $k$NN library; it specializes the accelerator for
 the small-$d$ exact graph-construction setting that arises in dynamic
 GNN layers.
@@ -310,18 +342,19 @@ bin, expand a concentric hypercube of bins around each query until
 the best-$k$ radius is certified---but the choice of $d$ has been
 constrained in practice to two or three axis-aligned dimensions
 because the bin tensor scales as $n_{\text{bins}}^d$.
-Qasim's PhD thesis~\cite{qasim2023thesis} discusses this cap
-explicitly in the GNN context; FastGraph's PCA-subspace formulation
-lifts it.
+Qasim's PhD thesis~\cite{qasim2023thesis} discusses the practical grid
+dimensionality limit in the GNN context. The original FastGraph method
+selected the first few input axes~\cite{agarwal2025fastgraph}; the present
+work replaces that fixed choice with a principal subspace.
 
 \paragraph*{PCA-projected indexing.}
 Using a principal-component projection as a coordinate system for
 spatial indexing has a long history; Sproull's $k$-d tree
 refinements~\cite{sproull1991refinements} already noted that
 splitting on the direction of maximum variance yields more balanced
-partitions than splitting on a coordinate axis. PCA trees and
-random-projection trees use a similar idea for CPU-side approximate
-nearest-neighbor search. FastGraph's PCA-subspace binning differs in
+partitions than splitting on a coordinate axis. Principal-axis tree
+variants use a similar idea for CPU-side neighbor search. FastGraph's
+PCA-subspace binning differs in
 two ways: the projection is partial (top-$k$ axes) rather than full,
 and the candidate-distance evaluation that follows the pruning step is
 performed in the \emph{original} $d$-dimensional space, preserving
@@ -341,12 +374,12 @@ RT hardware. CLOVER~\cite{kamel2025clover} introduces a GPU-native,
 Voronoi spatio-graph approach to exact $k$NN and reports
 $4\times$ over an ``optimized grid'' baseline and
 $230\times$ over FAISS on SIFT-like data. All of these methods are
-fundamentally locked to two or three input dimensions: Arkade notes
-that RT cores build BVHs only on three-dimensional data, CLOVER's
+implemented and evaluated for two- or three-dimensional inputs: Arkade
+notes that RT cores build BVHs only on three-dimensional data, CLOVER's
 reference implementation asserts \texttt{D == 3}, and LBVH-kNN is
 evaluated exclusively in 3D. We include a direct head-to-head against
-CLOVER at $d{=}3$ in Section~\ref{sec:clover}, but these methods do
-not cover the $d{=}4$--$10$ latent-space workload targeted here.
+CLOVER at $d{=}3$ in Section~\ref{sec:clover}, but the released methods
+do not provide a $d{=}4$--$10$ path comparable to the one evaluated here.
 
 \paragraph*{Approximate GPU $k$NN.}
 A parallel body of work has produced GPU-resident approximate nearest
@@ -357,11 +390,9 @@ CAGRA~\cite{ootomo2023cagra}, distributed as part of RAPIDS
 \texttt{cuVS}, builds a high-quality graph index with an IVF-PQ or
 NN-Descent initialization. ANN-Descent variants have also been adapted
 to reduce memory traffic during construction~\cite{wang2021large}.
-These systems target high-throughput vector retrieval at recall
-$\lesssim 0.9$; FastGraph occupies the orthogonal exact, small-$d$,
-graph-construction regime where the cost of an approximate edge is
-not borne by a single retrieval call but accumulates across every
-training event. We benchmark CAGRA and GGNN as approximate
+These systems expose a tunable recall--throughput tradeoff for
+high-throughput vector retrieval; FastGraph instead targets exact,
+small-$d$ graph construction. We benchmark CAGRA and GGNN as approximate
 comparators (Section~\ref{sec:recall}) but do not include CPU-only ANN
 systems (HNSW, ScaNN, Annoy)~\cite{malkov2020hnsw,guo2020scann,bernhardsson2013annoy}
 in the timing tables: the workload here is GPU-resident end-to-end
@@ -417,15 +448,19 @@ range.
 \subsection{Phase 2: Binning in the projected subspace}
 \label{sec:phase2}
 
-We partition $Y$ with a uniform grid of width $w$ along each of the
-$k$ projected axes. The per-axis division count is set heuristically
+We partition $Y$ with a uniform grid whose scalar width $w$ is shared
+across the $k$ projected axes. The division count is set heuristically
 to balance bin density against neighborhood reach,
 \[
   n_{\text{bins}} = \left(\frac{32\,n_{\text{elems}}}{K}\right)^{\frac{1}{k}},
 \]
-where $n_{\text{elems}}$ is the per-row-split point count, $K$ is the
-requested neighborhood size, and the result is clamped to
-$[5,30]$. Points are sorted by bin index, and cumulative offsets are
+where the released implementation uses the historical occupancy proxy
+$n_{\text{elems}}=\lfloor\max(\texttt{row\_splits})/
+|\texttt{row\_splits}|\rfloor+1$, $K$ is the requested neighborhood
+size, and the integer result is clamped to $[5,30]$. For the one-segment
+benchmark input \texttt{row\_splits}=$[0,N]$, this proxy is approximately
+$N/2$; it is a performance heuristic and does not enter the exactness
+condition. Points are sorted by bin index, and cumulative offsets are
 stored so that each bin can be addressed as a contiguous slice of the
 sorted point array. Row splits, which delineate the per-event
 boundaries inside a batched tensor, are honored by the binning kernel
@@ -463,12 +498,11 @@ projected distance never overestimates the true distance.
 
 After visiting all bins within the current hypercube shell of radius
 $s$, any unvisited bin lies at projected distance at least
-$w_{\min} \cdot s$ from $y_q$, where
-$w_{\min} = \min_j \texttt{binWidths}[j]$ is the most conservative bin
-width across the projected axes. Thus any unvisited point satisfies
-$\|y_q - y_u\|^2 \ge (w_{\min} \cdot s)^2$. Combined with the
-contraction above, $\|x_q - x_u\|^2 \ge (w_{\min} \cdot s)^2$, so
-once the heap has filled and $(w_{\min} \cdot s)^2 > r_K^2$, no unseen
+$w \cdot s$ from $y_q$, where $w$ is the scalar width shared by all
+projected axes in the released implementation. Thus any unvisited point
+satisfies $\|y_q - y_u\|^2 \ge (w \cdot s)^2$. Combined with the
+contraction above, $\|x_q - x_u\|^2 \ge (w \cdot s)^2$, so
+once the heap has filled and $(w \cdot s)^2 > r_K^2$, no unseen
 point can be closer in the true distance than the current $K$-th
 neighbor. The algorithm may safely terminate; the returned $K$
 neighbors are exact under the paper's distance convention. We
@@ -506,13 +540,13 @@ original-space distance computation.
 
 \begin{algorithm}[H]
 \DontPrintSemicolon
-\KwIn{\texttt{coords}[$n_v$][$n_c$] (original-space $X$), $V_k$, \texttt{binIdx}[$n_v$] (projected-space bins), \texttt{binOffsets}[$n_v$][$n_b{+}1$], \texttt{binBounds}[$n_B$], \texttt{binCounts}[$n_b$], \texttt{binWidths}[$n_b$], $n_v,K,n_c,n_b,n_B$}
+\KwIn{\texttt{coords}[$n_v$][$n_c$] (original-space $X$), $V_k$, \texttt{binIdx}[$n_v$] (projected-space bins), \texttt{binOffsets}[$n_v$][$n_b{+}1$], \texttt{binBounds}[$n_B$], \texttt{binCounts}[$n_b$], scalar \texttt{binWidth}, $n_v,K,n_c,n_b,n_B$}
 \KwOut{\texttt{neighbors}[$n_v$][$K$] indices including slot 0 self by convention, $r_K^2$ values}
 \ForEach{$v \in [0,n_v)$ \textbf{in parallel}}{
   \texttt{neighbors}[v][0]$\leftarrow(v,0)$; \texttt{filled}$\leftarrow1$; $(\texttt{maxIdx},\texttt{maxD2})\leftarrow(0,0)$\;
   $\texttt{totalBins}\leftarrow\prod_{d=0}^{n_b-1}\texttt{binCounts}[d]$, $\texttt{gOff}\leftarrow \texttt{totalBins}\cdot\lfloor \texttt{binIdx}[v]/\texttt{totalBins}\rfloor$\;
   \texttt{step}$\leftarrow$\texttt{BinStepper}(\texttt{binCounts}, \texttt{binOffsets}[v]$[1..n_b]$) \tcp*{operates in projected $y$-space}
-  \texttt{wMin}$\leftarrow \min_j \texttt{binWidths}[j]$\;
+  $w\leftarrow \texttt{binWidth}$\;
   \texttt{cont}$\leftarrow$ true; $s\leftarrow0$ \tcp*{$s$: current cube-shell radius (projected space)}
   \While{\texttt{cont}}{
     \texttt{step.setDistance}($s$); \texttt{cont}$\leftarrow$ false\;
@@ -529,7 +563,7 @@ original-space distance computation.
       }
       \texttt{cont}$\leftarrow$ true
     }
-    \If{$\texttt{filled}{=}K$ \textbf{and} $(\texttt{wMin}\cdot s)^2>\texttt{maxD2}$}{\Break}
+    \If{$\texttt{filled}{=}K$ \textbf{and} $(w\cdot s)^2>\texttt{maxD2}$}{\Break}
     $s$++
   }
 }
@@ -544,13 +578,16 @@ Let $B = n_{\text{bins}}^{k}$ be the size of the bin grid. The PCA
 projection reduces this from the $n_{\text{bins}}^{d}$ of an
 axis-aligned scheme to a quantity that depends only on the binning
 subspace size $k$, \emph{independently of the input dimension} $d$.
-This is what removes the small-$d$ cap that limited prior cell-list
-GPU $k$NN implementations.
+This bounds the grid size without tying pruning to the first $k$ input
+columns.
 
-\noindent\textit{Setup.} Subspace estimation runs a partial
-eigen-decomposition of $X^\top X$ at $O(N d^2 + d^3)$, dominated in
-our regime by the $N d^2$ Gram accumulation. Binning, sorting, and
-offset construction take $O(N \log N + B)$.
+\noindent\textit{Setup.} Let $S=\min(N,50{,}000)$ be the PCA sample
+size and $q=\min(k+2,d)$ the low-rank solve size. For the fixed number
+of randomized iterations used by \texttt{torch.pca\_lowrank}, the
+subspace fit costs $O(Sdq+(S+d)q^2)$, followed by $O(Ndk)$ to project
+all points. This is a sampled low-rank computation, not a full
+$O(Nd^2+d^3)$ eigendecomposition. Binning, sorting, and offset
+construction take $O(N \log N + B)$.
 
 \noindent\textit{Memory.} Auxiliary memory is $O(N(d + k + K) + B)$:
 sorted coordinates, projected coordinates, permutation, neighbor
@@ -569,7 +606,7 @@ per-query behavior is the more important operational quantity.
 \noindent\textit{Parallel cost.} With $P$ CUDA threads,
 \[
   \frac{N}{P} \cdot O\!\left(K(d + K)\right)
-  \;+\; O\!\left(N d^2 + N \log N + B\right).
+  \;+\; O\!\left(Sdq+(S+d)q^2+Ndk+N\log N+B\right).
 \]
 
 \subsection{Gradient flow and PyTorch integration}
@@ -619,30 +656,28 @@ All GPU experiments use a single NVIDIA A100 80\,GB PCIe with CUDA
 \texttt{IndexFlatL2}~\cite{johnson2019billion}, cuVS brute force
 (also exact), CAGRA via cuVS~\cite{ootomo2023cagra}
 (approximate), and GGNN~\cite{ggnn} (approximate); FastGraph is
-compiled from the public release.
+compiled from the manuscript's \texttt{paper-release} branch.
 
 \paragraph*{Timing protocol.}
-The benchmark archive contains three Slurm allocation modes. PCA-FastGraph
-and its cross-allocation calibration cells were collected with
-\texttt{--gres=mps:50}; the later full CAGRA-NN-Descent and GGNN sweeps
-used \texttt{--gres=mps:100}; and some legacy exact-baseline cells used
-an exclusive \texttt{--gres=gpu:1} allocation. Jobs used for latency
-comparisons were serialized to avoid MPS contention, and calibration
-cells were used to identify allocation-sensitive or contaminated runs.
-All timed regions are bracketed by device synchronization. The FastGraph
-timer receives GPU-resident coordinates, whereas the FAISS, cuVS, and
-CAGRA runners begin with NumPy input and include device conversion, index
-construction, and search. Reported values are therefore runner-level graph
-construction times rather than kernel-only measurements. Figures and
+All comparative HGCAL timing plots and the headline table use the later,
+serialized \texttt{--gres=mps:100} sweeps only; older
+\texttt{mps:50} and exclusive-allocation rows are excluded. FastGraph,
+FAISS, cuVS BF, and GGNN have seven repetitions per plotted cell, and the
+dedicated full CAGRA-NN-Descent sweep has three. All timed regions are
+bracketed by device synchronization. FastGraph and GGNN receive
+GPU-resident coordinates, whereas the FAISS, cuVS, and CAGRA runners begin
+with NumPy input and include host-to-device conversion in addition to
+index construction and search. The resulting values are runner-level
+graph-construction times, not isolated kernel times; this input-path
+asymmetry is a limitation of the archived benchmark harness. Figures and
 scalar comparisons report medians across successful repetitions; error
-bars show the interquartile range when repeated measurements are available.
+bars show the interquartile range.
 
 \paragraph*{CAGRA build path.}
-CAGRA's default IVF-PQ build path fails on HGCAL data at $d \ge 5$
-with a RAFT assertion about invalid or duplicated neighbor nodes. The
-failure is consistent with PQ codebook collapse on heterogeneous-scale
-features: energy, geometry, time, and layer index occupy very different
-numeric ranges. We therefore use CAGRA's \texttt{build\_algo="nn\_descent"}
+CAGRA's default IVF-PQ build path fails on the benchmark data at $d \ge 5$
+with a RAFT assertion about invalid or duplicated neighbor nodes. We did
+not isolate the internal cause of this failure. We therefore use CAGRA's
+\texttt{build\_algo="nn\_descent"}
 path throughout the paper; it avoids the PQ initialization, succeeds
 across the full $d{=}2$--$10$ sweep, and is the robust full-sweep
 CAGRA baseline used in all plots and tables.
@@ -660,9 +695,17 @@ register budget. The empirical optimum on HGCAL data is well inside
 the released range, so this is not a binding limitation in practice.
 
 \paragraph*{Benchmark data.}
-The CMS HGCAL recHit feature dataset comprises \hgcalRecHits\ hits
-concatenated across all events with up to ten spatial and energy
-features per hit. Synthetic comparisons use isotropic Gaussian
+The detector-derived benchmark matrix comprises \hgcalRecHits\ CMS HGCAL
+simulation recHits concatenated across events, with ten stored feature
+columns per hit. The harness deterministically takes the first $N$ rows
+and first $d$ columns; the available artifact does not identify the column
+names, units, preprocessing, or normalization. Increasing $d$ therefore
+changes both the number and identity of included features, and PCA remains
+sensitive to their numerical scales. Each timed slice is passed to the
+implementations as one segment rather than preserving event boundaries. This construction
+is a large-$N$ stress test of the kernels on detector-derived features; it
+is not an event-batched end-to-end GNN workload or a learned-latent sample.
+Synthetic comparisons use isotropic Gaussian
 $\mathcal{N}(0, I_d)$ samples; this matches the benchmark protocol
 used in this paper and isolates the effect of dimensionality from the
 heterogeneous-scale pathology of HGCAL.
@@ -676,7 +719,7 @@ heterogeneous-scale pathology of HGCAL.
 \centering
   \begin{minipage}[c]{0.56\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png}
+  \includegraphics[width=\linewidth]{gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.pdf}
   \end{minipage}
   \hfill
   \begin{minipage}[c]{0.42\textwidth}
@@ -692,10 +735,10 @@ heterogeneous-scale pathology of HGCAL.
   4  & 2.30$\times$  & 1.12$\times$  & 0.98$\times$  & 0.22$\times$ \\
   5  & 3.09$\times$  & 1.48$\times$  & 1.39$\times$  & 0.28$\times$ \\
   6  & 10.51$\times$ & 4.92$\times$  & 4.40$\times$  & 0.49$\times$ \\
-  7  & 35.23$\times$ & 16.77$\times$ & 14.53$\times$ & 1.48$\times$ \\
-  8  & 42.46$\times$ & 20.15$\times$ & 17.36$\times$ & 1.86$\times$ \\
-  9  & 32.68$\times$ & 15.60$\times$ & 13.37$\times$ & 1.42$\times$ \\
-  10 & 29.83$\times$ & 14.31$\times$ & 13.67$\times$ & 1.48$\times$ \\
+  7  & 32.50$\times$ & 15.50$\times$ & 13.57$\times$ & 1.38$\times$ \\
+  8  & 42.01$\times$ & 19.97$\times$ & 17.30$\times$ & 1.86$\times$ \\
+  9  & 31.85$\times$ & 15.23$\times$ & 13.20$\times$ & 1.40$\times$ \\
+  10 & 34.55$\times$ & 16.58$\times$ & 14.07$\times$ & 1.52$\times$ \\
   \midrule
   geo. & 10.1$\times$ & 4.8$\times$ & 4.3$\times$ & 0.63$\times$ \\
   \bottomrule
@@ -703,7 +746,8 @@ heterogeneous-scale pathology of HGCAL.
   \end{minipage}
   \caption{Headline benchmark on detector data at $N{=}5$\,M, $k{=}40$.
   Left: dimensional scaling of wall-clock time. FastGraph is the
-  fastest exact GPU method across the full $d{=}2$--$10$ range.
+  fastest among the tested dimension-general exact GPU baselines across
+  the full $d{=}2$--$10$ range.
   Right: speedups of FastGraph over each backend at the same operating
   point. FAISS and cuVS BF are exact; CAGRA-nnd and GGNN are approximate
   default-recall baselines, and GGNN's timing should be read with its
@@ -712,8 +756,8 @@ heterogeneous-scale pathology of HGCAL.
 \end{figure}
 
 The right-hand table in Figure~\ref{fig:headline_dim} reports the cross-method speedups
-of FastGraph at the headline operating point. FastGraph is the
-fastest \emph{exact} GPU $k$NN method at every dimension we measure
+of FastGraph at the headline operating point. FastGraph is the fastest
+among the tested dimension-general \emph{exact} GPU $k$NN baselines at every dimension we measure
 and has a \geoCagra\ geomean advantage over the approximate
 CAGRA-NN-Descent build. The GGNN approximate baseline does win on raw
 wall-clock at low $d$, but its much lower recall scores in matched-
@@ -729,29 +773,33 @@ the internal axis-aligned ablation that motivated the PCA-subspace
 design; the headline table therefore reports only the PCA-subspace
 method.
 
-The qualitative shape of the curve is determined by the regime
-transition at $d{=}5$--$6$. Below this transition, all GPU methods
+The curve shows a marked change between $d{=}5$ and $d{=}6$. Below
+this point, all GPU methods
 are within a small constant factor and the binning advantage is
 modest; above it, FAISS/cuVS BF (which scale as $N^2 d$) both grow
 rapidly with $d$, while FastGraph retains a useful pruning structure
-through PCA-subspace binning.
+through PCA-subspace binning. Because each successive $d$ appends a
+specific raw feature column, this change cannot be attributed to
+dimensionality or PCA anisotropy alone without feature-subset and
+normalization controls.
 
 \subsection{Dataset-size scaling}
 
 Figure~\ref{fig:size_scaling} reports dataset-size scaling at fixed
-$k{=}40$ for $d{=}3$ and $d{=}8$; the same ordering persists as $N$
-grows, with stronger separation in the PCA-favorable regime.
+$k{=}40$ for $d{=}3$ and $d{=}8$ on the common five-point
+\texttt{mps:100} grid. Separation is strongest in the PCA-favorable
+regime.
 
 \begin{figure}[!t]
 \centering
   \begin{minipage}{0.49\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{gpu_fgc_speedup_d3_all_algorithms.png}
+  \includegraphics[width=\linewidth]{gpu_fgc_speedup_d3_all_algorithms.pdf}
   \end{minipage}
   \hfill
   \begin{minipage}{0.49\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{gpu_fgc_speedup_d8_gpu.png}
+  \includegraphics[width=\linewidth]{gpu_fgc_speedup_d8_gpu.pdf}
   \end{minipage}
   \caption{Dataset-size scaling on HGCAL at $k{=}40$ for $d{=}3$
   (left) and $d{=}8$ (right). FastGraph maintains a speed advantage
@@ -767,7 +815,7 @@ regime and the larger $d{\geq}6$ speedups remain visible.
 
 \begin{figure}[!htbp]
 \centering
-  \includegraphics[width=0.95\textwidth]{gpu_fgc_k_comparison_1M_d2-10_all_algorithms.png}
+  \includegraphics[width=0.95\textwidth]{gpu_fgc_k_comparison_1M_d2-10_all_algorithms.pdf}
   \caption{Wall-clock at $N{=}1$\,M for $k\in\{10, 40, 100\}$ across
   the full dimensional range. The qualitative pattern of
   Figure~\ref{fig:headline_dim} is preserved across $k$.}
@@ -794,7 +842,7 @@ full dimensional sweep and two dataset-size scans at $d{=}3$ and $d{=}8$.
 
 \begin{figure}[!htbp]
 \centering
-  \includegraphics[width=0.95\textwidth]{synth_summary_gpu.png}
+  \includegraphics[width=0.95\textwidth]{synth_summary_gpu.pdf}
   \caption{Controlled synthetic Gaussian benchmarks. Top:
   dimensional scaling at $N{=}1$\,M, $k{=}40$. Bottom:
   dataset-size scaling at $d{=}3$ and $d{=}8$, $k{=}40$.}
@@ -808,8 +856,8 @@ $\mathcal{N}(0, I_d)$ data at $N{=}10^6$, $k{=}40$ (median of
 3 reps on the fixed-seed synthetic Gaussian benchmark set used
 throughout this paper). The HGCAL detector-data wins at $d \geq 6$
 (Figure~\ref{fig:headline_dim}) are not reproduced on isotropic
-data, isolating them to the anisotropic structure of detector
-features rather than a generic property of cell-list binning.}
+data, showing that the detector-data result does not follow from
+dimensionality and cell-list binning alone.}
 \label{tab:synth-dim}
 \begin{tabular}{lrrr}
 \toprule
@@ -822,42 +870,35 @@ $d$ & vs cuVS BF & vs FAISS-GPU & vs CAGRA-nnd \\
 \end{tabular}
 \end{table}
 
-The implication for the headline claim is that the HGCAL detector
-wins at $d{=}6$--$10$ (Section~\ref{sec:headline}) come from PCA
-picking up anisotropic structure that does not exist in isotropic
-synthetic data, not from cell-list binning alone.
+The implication for the headline claim is narrower: the HGCAL detector
+wins at $d{=}6$--$10$ (Section~\ref{sec:headline}) are consistent with
+PCA exploiting structure absent from isotropic synthetic data, but the
+current feature-prefix experiment does not isolate dimensionality,
+feature identity, units, and anisotropy from one another.
 
 \subsection{Memory footprint}
 \label{sec:memory}
 
 \begin{figure}[!htbp]
 \centering
-  \includegraphics[width=0.95\textwidth]{memory_footprint.png}
-  \caption{GPU memory footprint per backend at $d{=}3$, $k{=}40$,
-  measured by a 100\,Hz NVML polling thread that captures the true
-  peak during the call. \emph{Left:} workspace, defined as
-  $\text{peak} - N{\times}k{\times}(8{+}4)$ bytes, i.e.\ everything
-  the algorithm allocates beyond the returned $(\text{idx},
-  \text{dist})$ tensors, with \texttt{idx} stored as int64 and
-  \texttt{dist} as float32; this isolates temporary algorithm
-  workspace from the common output allocation.
-  \emph{Right:} end-state, the resident NVML reading after the call
-  synchronises while the caller still holds the output tensors.}
+  \includegraphics[width=0.95\textwidth]{memory_footprint.pdf}
+  \caption{Post-call GPU memory at $d{=}3$, $k{=}40$. Each value is
+  the change in device-wide NVML used memory between a pre-call baseline
+  and a synchronized post-call sample while the caller still holds the
+  backend's outputs. Values include live outputs plus allocator and index
+  state; they are not transient peak-workspace measurements.}
   \label{fig:memory_footprint}
 \end{figure}
 
-\paragraph*{Workspace and resident memory.}
-FastGraph allocates more workspace than the dense GPU baselines: at
-$N{=}5$\,M, $d{=}3$, $k{=}40$ it uses about $3.0$\,GB versus
-$1.4$\,GB for FAISS-GPU, CAGRA-nn-descent, and GGNN, and
-$\sim 80$\,MB for cuVS BF; the corresponding FastGraph workspace at
-$d{=}8$ is $\sim 3.3$\,GB. This cost comes from the projected
-coordinate array, bin assignments and boundaries, sort/remap
-intermediates, and tensors required by the differentiable distance
-outputs. In resident end-state memory, the gap is smaller:
-FastGraph holds $\sim 5.3$\,GB versus $1.6$--$2.9$\,GB for the other
-backends, because the common $N{\times}k$ output tensors dominate
-resident memory after temporary workspace is released.
+\paragraph*{Resident memory.}
+At $N{=}5$\,M, $d{=}3$, $k{=}40$, the synchronized post-call delta is
+about $5.3$\,GB for FastGraph versus $1.6$--$2.9$\,GB for the other
+backends. FastGraph returns int64 indices and float32 distances, whose
+$N{\times}k$ tensors alone occupy about $2.29$\,GB at this point; the
+remainder includes live tensors and allocator state retained after the
+call. CAGRA and GGNN return different output representations, so this is
+an as-used resident-footprint comparison rather than an output-normalized
+workspace comparison.
 
 \paragraph*{Approximate-backend interpretation.}
 The plot reports each backend at the configuration used elsewhere in
@@ -873,11 +914,11 @@ canonical setting; we therefore report the memory each backend uses
 backends are not bound to FastGraph's exact-recall constraint.
 
 \paragraph*{Measurement methodology.}
-Memory is measured with a background NVML poller running at
-$\sim 100$\,Hz during the timed region. The reported workspace is the
-observed peak minus the backend's output-tensor footprint, while the
-end-state value is the resident allocation after synchronization with
-the output tensors still live.
+Memory is reported from synchronized before/after NVML samples. A
+Python-thread poller was also recorded, but several external backends hold
+the Python GIL and starve that poller during the call; those transient
+samples are therefore excluded rather than presented as comparable peak
+measurements.
 
 \subsection{Binning dimensionality ablation}
 \label{sec:mbd-ablation}
@@ -942,7 +983,7 @@ spaces with $d{=}4$--$10$.
 
 \begin{figure}[!htbp]
 \centering
-  \includegraphics[width=0.9\textwidth]{clover_headtohead_d3.png}
+  \includegraphics[width=0.9\textwidth]{clover_headtohead_d3.pdf}
   \caption{FastGraph vs CLOVER at $d{=}3$, $k{=}40$, across three
   data distributions: HGCAL recHits (left), synthetic Gaussian
   $\mathcal{N}(0, I_3)$ (center), synthetic uniform on $[0,1]^3$
@@ -962,26 +1003,21 @@ while CLOVER uses a 3D density-adaptive spatio-graph. This is a
 favorable regime for CLOVER and an intentionally out-of-scope regime
 for FastGraph's PCA-subspace contribution.
 
-The deployment regime for HGCAL graph-construction GNNs is the
-\emph{learned latent space} of the trained network, not the raw 3D
-detector coordinates. Modern dynamic-graph layers used in HEP
-reconstruction operate at $d=4$--$10$ in this latent space:
-GravNet uses $d=4$ in its original
-formulation~\cite{Qasim2019GravNet} and $d \in \{6, 8, 10\}$ in
-recent HGCAL multi-particle
-variants~\cite{qasim2021multiparticle,bhattacharya2022gnn};
-EdgeConv-derived layers~\cite{wang2019dynamic} and object
-condensation pipelines~\cite{Kieseler2020ObjectCondensation} expose
-similar ranges. CLOVER, LBVH-kNN, and the RT-core methods are
-unavailable by construction in this regime: they are
-hardware-locked or implementation-locked to $D=3$ and have no
-defined extension to $d \geq 4$.
+The deployment regime targeted by FastGraph is the \emph{learned latent
+space} of a dynamic-graph network, not only raw 3D detector coordinates.
+The original GravNet formulation uses a four-dimensional learned space
+for neighbor construction~\cite{Qasim2019GravNet}; this work evaluates
+that point and nearby low-to-moderate dimensions through $d{=}10$.
+CLOVER, LBVH-kNN, and the RT-core methods considered here do not provide
+a released $d \geq 4$ implementation for a direct comparison.
 
 \subsection{Recall evaluation}
 \label{sec:recall}
 
-To verify FastGraph's exactness we compare against a brute-force
-reference on HGCAL data up to $N{=}5\times 10^5$. Because many
+To evaluate the underlying FastGraph axis kernel and the approximate
+comparators, we use an archived broad recall sweep against a brute-force
+reference on HGCAL data up to $N{=}5\times 10^5$. This sweep invokes
+\texttt{binned\_select\_knn}, not the PCA wrapper. Because many
 recHits are spatially coincident, neighbor indices are not unique;
 we therefore use \emph{distance-based recall}, counting a predicted
 neighbor as correct when its squared distance is no larger than the
@@ -997,13 +1033,13 @@ In this setting the exactness claim is about the returned neighbor
 set under a fixed distance convention, not about a unique graph
 topology when ties are present.
 
-Under this metric FastGraph achieves recall $= 1.0$ across every
+Under this metric the FastGraph axis kernel achieves recall $= 1.0$ across every
 tested configuration ($d \in \{2,\ldots,10\}$, $k_{\text{nn}} \in
 \{10, 40, 100\}$, $N$ up to $5 \times 10^5$). The approximate
 baselines, even at their highest-quality parameter settings, do not
 reach exact recall. GGNN is the clearest example: at $d{=}5$ its
 highest-quality setting collapses to roughly $0.03$ recall before
-recovering at higher dimensions. Table~\ref{tab:recall} summarises
+recovering at higher dimensions. Table~\ref{tab:recall} summarizes
 the mean and representative-cell values.
 
 \begin{table}[!htbp]
@@ -1019,7 +1055,7 @@ cell is $d{=}3$, $N{=}5\times 10^5$, $k_{\text{nn}}{=}40$.}
 \toprule
 Method & mean over all cells & representative cell \\
 \midrule
-FastGraph (exact)   & $1.000$ & $1.000$ \\
+FastGraph axis kernel (exact) & $1.000$ & $1.000$ \\
 CAGRA-NN-Descent    & $0.732$ & $0.818$ \\
 GGNN                & $0.666$ & $0.410$ \\
 \bottomrule
@@ -1035,19 +1071,28 @@ replacements. Second, GGNN's highest-quality setting drops sharply at
 $d{=}5$ before recovering at higher dimensions; the text notes that
 behavior explicitly rather than adding another table column.
 
+The PCA path is validated separately with the released
+\texttt{binned\_select\_knn\_pca} entry point. Dedicated GPU tests compare
+the complete sorted distance multiset returned for every query with an
+element-wise FP32 brute-force reference at $d\in\{4,5,8,10\}$,
+$K\in\{16,40,128\}$, and $N$ up to 8,000. They also exercise random PCA
+subsampling and a three-segment \texttt{row\_splits} input. All tested
+indices are valid, unique, and segment-local; returned distances match
+recomputed distances, and every distance multiset matches brute force.
+
 \begin{figure}[!htbp]
 \centering
 \begin{minipage}[t]{0.49\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{recall_exactness_proof.png}
+  \includegraphics[width=\linewidth]{recall_exactness_proof.pdf}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.49\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{recall_speed_pareto.png}
+  \includegraphics[width=\linewidth]{recall_speed_pareto.pdf}
 \end{minipage}
   \caption{Recall evaluation on HGCAL data. \emph{Left:}
   representative distance-based recall at $d{=}3$,
-  $N{=}5\times10^5$, $k{=}40$; FastGraph and FAISS-GPU reach
+  $N{=}5\times10^5$, $k{=}40$; the FastGraph axis kernel and FAISS-GPU reach
   recall $=1.0$ under their kernel-matched exact distance
   conventions. \emph{Right:} recall-speed Pareto at the same
   operating point; approximate methods are only competitive when
@@ -1076,20 +1121,21 @@ kernel described in the appendix.
 \section{Limitations}
 \label{sec:limitations}
 
-\paragraph*{Resolved axis-aligned limitations.}
-The $d_{\max}{=}5$ binning cap inherited from axis-aligned cell-list
-implementations is removed by the PCA-subspace formulation: the
-projected grid is $n_{\text{bins}}^{k}$ in the binning subspace size
-$k$, independent of the input dimensionality $d$. Per-column scale
-heterogeneity is also absorbed into the variance ordering of the
-principal components, so the binning structure no longer has to be
-told which input axes are large.
+\paragraph*{Data-adaptive binning subspace.}
+Both the original axis-aligned method and the PCA formulation bound the
+grid at $n_{\text{bins}}^{k}$ for a small binning dimension $k$, independent
+of input dimension $d$. The contribution here is to replace the original
+first-$k$-column choice with a learned orthonormal basis. This removes
+dependence on column order for a fixed feature matrix, but PCA is not
+invariant to rescaling individual features: their units and preprocessing
+change the covariance and therefore the selected subspace. The method
+still requires a small $k$ to keep the grid tractable.
 
 \paragraph*{Data distribution still matters.}
 The PCA contribution's effectiveness is a function of how much
 pairwise-distance variance the leading components actually capture.
-On strongly anisotropic data---HGCAL recHits, anything with a few
-dominant axes---FastGraph's PCA-subspace binning is substantially
+On the anisotropic detector-feature matrix used here, FastGraph's
+PCA-subspace binning is substantially
 faster than axis-aligned cell lists (Section~\ref{sec:mbd-ablation},
 geomean speedups in Section~\ref{sec:headline}). On isotropic data, the
 leading subspace is an arbitrary orthonormal $k$-dimensional projection and FastGraph
@@ -1105,8 +1151,9 @@ principal components carry real structural information, which is the
 regime modern learned-latent dynamic graphs are designed to live in.
 
 \paragraph*{Remaining limitations.}
-PCA estimation itself adds an $O(N d^2)$ term that is amortised over
-the kNN query in the regimes we benchmark, but at very small $N$ the
+PCA estimation adds a sampled low-rank fit and an $O(Ndk)$ projection
+that are amortized over the kNN query in the regimes we benchmark, but
+at very small $N$ the
 projection cost becomes a non-negligible fraction of the total
 wall-clock; for tiny per-event point counts an axis-aligned variant
 remains preferable. The current implementation targets a single
@@ -1118,6 +1165,19 @@ Among the GPU baselines, approximate methods remain faster than
 FastGraph at default low-recall settings; FastGraph is the right
 choice only when exact graph construction is required.
 
+The detector-derived timing study is a kernel stress test rather than a
+deployment benchmark: it concatenates recHits and passes each slice as a
+single segment. Event-preserving row splits can change both the problem
+size and the spatial density seen by a cell list. Likewise, the benchmark
+features are detector-derived inputs, not embeddings sampled from a
+trained model. Event-batched timings and learned-latent coordinates are
+therefore required before extrapolating the reported speedups to
+end-to-end training throughput. Extending the evaluated input dimension
+beyond $d{=}10$ is secondary to those two validation steps;
+higher-dimensional feature-space graph layers remain outside the present
+claim. A projected-space LBVH is another possible extension when uniform
+bins cease to prune effectively.
+
 \paragraph*{Why exactness matters for the downstream GNN.}
 The case for an exact $k$NN backend over a recall-tuned approximate
 one is not a raw-recall argument but a sensitivity-of-downstream
@@ -1125,12 +1185,13 @@ argument. Adversarial-robustness studies of graph neural networks
 show that node predictions can shift substantially under small,
 structure-preserving edge perturbations to the input
 graph~\cite{zugner2018adversarial}; the same literature also
-documents that systematic reweighting of the neighbourhood---e.g.,
-replacing direct neighbours with a diffusion-smoothed neighbour
+documents that systematic reweighting of the neighborhood---e.g.,
+replacing direct neighbors with a diffusion-smoothed neighbor
 set---measurably alters downstream accuracy~\cite{klicpera2019diffusion}.
-The neighbour-set mismatches injected by an approximate $k$NN are
-exactly this kind of perturbation, distributed non-uniformly across
-the event and dependent on the build-side index hyperparameters.
+The neighbor-set mismatches injected by an approximate $k$NN are
+analogous edge perturbations and depend on build-side index
+hyperparameters; their event-level distribution and downstream effect
+have not been measured here.
 We do not claim the HGCAL reconstruction targets are unusually
 sensitive to approximate-$k$NN edge noise---that would require a
 dedicated model study beyond the scope of this paper---but the more
@@ -1141,26 +1202,26 @@ competitive on wall-clock in the relevant operating regime
 (Section~\ref{sec:headline}).
 
 \paragraph*{CAGRA on heterogeneous data.}
-CAGRA's default IVF-PQ build path fails on HGCAL data at $d \ge 5$
+CAGRA's default IVF-PQ build path fails on the benchmark data at $d \ge 5$
 (Section~\ref{sec:expsetup}); the NN-Descent fallback succeeds
 across the full dimensional sweep but is \spdHGCALcagradeight\
 slower than FastGraph at the $d{=}8$ reference cell. We report the
-NN-Descent numbers throughout. This is a finding about CAGRA on
-heterogeneous-scale features, not a generic CAGRA limitation;
-practitioners deploying CAGRA on similarly heterogeneous physics
-datasets should be aware of the failure mode and the appropriate
-build-path mitigation.
+NN-Descent numbers throughout. This is an observed compatibility issue
+for the tested dataset and software configuration, not evidence of a
+generic CAGRA limitation or a diagnosis of the internal failure cause.
 
 \section{Data and Code Availability Statement}
 \begingroup
 \sloppy
-The FastGraph library, including the PCA-subspace extension described in
-this paper, is released at
+The FastGraph library repository, including the PCA-subspace extension
+described in this paper, is available at
 \url{https://github.com/AgarwalAarush/FastGraphCompute}, as a fork of
 the upstream \texttt{FastGraphCompute} library.
-The exact source used to collect every headline timing in this paper is
-the \texttt{paper-release} branch built against the CUDA 12.1
-toolchain. The released kernel surface covers binning subspace size
+The source used for the manuscript is maintained on the
+\texttt{paper-release} branch and built against the CUDA 12.1
+toolchain. The submission archive will pin the exact code and benchmark
+commits and provide a persistent identifier; until that archive is
+created, the moving branch URLs are not immutable artifacts. The kernel surface covers binning subspace size
 $k \in \{2, 3, 4, 5\}$. The benchmarking harness and runner scripts
 used to produce the figures live in a companion repository,
 \url{https://github.com/AgarwalAarush/fgc-performance}. The CLOVER
@@ -1172,10 +1233,12 @@ hardcoded synthetic-N template chain in \texttt{main()} disabled in favor
 of the mesh path, and the build retargeted to \texttt{sm\_80} for A100).
 \endgroup
 
-The detector-derived benchmarks use CMS HGCAL simulation data (recHit
+The detector-derived stress tests use CMS HGCAL simulation data (recHit
 feature vectors) accessed via an internal collaboration dataset of
 \hgcalRecHits\ calorimeter hits with up to ten spatial and energy
-features per hit. The data itself is internal to the CMS collaboration;
+features per hit. The benchmark concatenates events and does not release
+event boundaries or learned model embeddings. The data itself is internal
+to the CMS collaboration;
 synthetic Gaussian and uniform datasets used in
 Sections~\ref{sec:synthetic} and~\ref{sec:clover} are generated on the
 fly from fixed random seeds and are fully reproducible from the released
@@ -1184,21 +1247,22 @@ directly; external parties should contact the corresponding author.
 
 \section{Conclusion}
 
-We have introduced FastGraph, a PCA-subspace binned exact $k$-nearest-
-neighbor graph construction primitive for GPU geometric deep learning.
-The PCA-subspace formulation extends classical cell-list $k$NN past
-the small-dimensional cap that previously limited axis-aligned
-implementations, while a contraction argument
+We have presented a PCA-subspace extension to FastGraph, an exact
+$k$-nearest-neighbor graph-construction primitive for GPU geometric
+deep learning. The PCA-subspace formulation replaces FastGraph's fixed coordinate-axis
+binning with a data-adaptive basis, while a contraction argument
 ($V_k V_k^\top \preceq I_d$) preserves exactness in the original
-input space. On the HGCAL recHit workloads that motivate this paper,
-across $d{=}2$--$10$ at the headline $N{=}5$\,M, $k{=}40$ operating
-point, FastGraph is the fastest among the tested \emph{exact} GPU
+input space. On the detector-derived recHit stress test,
+across $d{=}2$--$10$ at the headline single-segment $N{=}5$\,M,
+$k{=}40$ operating
+point, FastGraph is the fastest among the tested dimension-general
+\emph{exact} GPU
 $k$NN baselines at every tested dimension, with speedups up to
-$40\times$ over
+$42\times$ over
 FAISS-GPU \texttt{IndexFlatL2}, $20\times$ over cuVS brute force
 (the strongest exact GPU baseline), and $17\times$ over the
-approximate CAGRA-NN-Descent build---which is itself the only CAGRA
-path that runs at $d \ge 5$ on heterogeneous-scale detector data. The ablation
+approximate CAGRA-NN-Descent build---the CAGRA path that completed the
+full $d{=}2$--$10$ sweep in our harness. The ablation
 in Section~\ref{sec:mbd-ablation} isolates the PCA rotation rather
 than incidental implementation differences as the primary
 contribution: comparing each variant at its own optimum gives a
@@ -1207,10 +1271,11 @@ and axis-aligned binning at $d{=}8$, $N{=}5$\,M, $k{=}40$.
 
 This paper does not claim that FastGraph is the fastest GPU $k$NN on
 every distribution or every dimensionality. Two boundaries of the
-claim are documented. First, the deployment regime targeted and measured
-here is the $d{=}4$--$10$ learned latent space used by GravNet and HGCAL
-multi-particle reconstruction; wider feature-space graph layers require
-separate evaluation. The 3D-only spatial-acceleration methods (CLOVER,
+claim are documented. First, the method targets the $d{=}4$--$10$
+low-to-moderate-dimensional regime around GravNet's learned space, but the
+current timing data are detector-derived stress-test features rather than
+learned embeddings; wider feature-space graph layers and trained-model
+coordinates require separate evaluation. The 3D-only spatial-acceleration methods (CLOVER,
 LBVH, RT-cores) are unavailable in the $d \ge 4$ regime by
 construction, and at the largest $d{=}3$ HGCAL head-to-head point
 ($N{=}5$\,M, $k{=}40$), the CLOVER spatio-graph index is about
@@ -1222,8 +1287,9 @@ the boundary of the claim. Second, on \emph{isotropic} data the PCA
 projection has no structure to exploit and FastGraph degrades toward
 ordinary cell-list behavior; for that case the relative ordering
 against dense BLAS brute force is determined by the cell-list
-pruning advantage alone, not by the PCA contribution. The HGCAL
-gains are an anisotropic-data result, and PCA-subspace binning
+pruning advantage alone, not by the PCA contribution. The detector-feature
+gains are consistent with an anisotropic-data advantage, subject to the
+feature-scale and feature-prefix controls identified above, and PCA-subspace binning
 should be a generally useful substrate for dynamic graph layers in
 scientific GNNs whose latent spaces have similar spectral structure.
 

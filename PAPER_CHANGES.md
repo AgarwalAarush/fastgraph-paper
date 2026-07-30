@@ -325,12 +325,14 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        expected output, and add a CITATION/CFF plus archival DOI/PID.
        The README currently points installation at the upstream fork,
        says the paper is forthcoming, and advertises an absent license.
-- [ ] Q45. Reconcile the existing FastGraph preprint
+- [~] Q45. Reconcile the existing FastGraph preprint
        `arXiv:2511.10442`. If this manuscript supersedes it, upload a
        revised version; if it is a separate PCA contribution, cite it
        and clearly distinguish the prior axis-aligned FastGraph work.
        Do not submit with ambiguous overlap or a renewed "we introduce
-       FastGraph" claim.
+       FastGraph" claim. The manuscript now cites and distinguishes the
+       prior first-coordinate method; uploading a superseding arXiv
+       version and disclosing it in the cover letter remain author actions.
 
 ### Q2. Experimental validity and reproducibility
 
@@ -352,42 +354,48 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        The global 50k-row subsample, `torch.pca_lowrank`, active PyTorch
        RNG state, and one-projection-per-call behavior are now disclosed;
        per-segment PCA and variability measurements remain pending.
-- [~] Q49. Unify or accurately disclose the timing protocol. PCA and
+- [x] Q49. Unify or accurately disclose the timing protocol. PCA and
        calibration runs used `mps:50`, while later CAGRA/GGNN runs used
        `mps:100`; the canonical CSVs merge allocations with a
        drift-aware policy. Prefer a clean canonical rerun under one
        allocation, otherwise document the merge and calibration.
-       The mixed `mps:50`/`mps:100`/`gpu:1` provenance and calibration
-       are now disclosed. A one-allocation canonical rerun remains the
-       preferred final resolution.
-- [x] Q50. Align timed regions across backends or quantify the
+       Completed 2026-07-30: archived Codex and Slurm records identify the
+       later `mps:100` campaigns. All headline HGCAL plots now read only
+       those clean files; legacy `mps:50` and exclusive rows are excluded.
+- [~] Q50. Align timed regions across backends or quantify the
        difference. PCA-FGC receives GPU-resident data before timing,
        whereas FAISS/cuVS/CAGRA timing includes some host-to-device
        conversion and/or index setup.
-       Completed by explicit disclosure in the timing protocol; a
-       future kernel-only comparison would be supplementary.
-- [ ] Q51. Regenerate every headline scalar, table, and figure from one
+       The asymmetry is now explicit: FastGraph/GGNN receive GPU-resident
+       inputs while FAISS/cuVS/CAGRA include host-to-device transfer.
+       A matched GPU-input rerun remains pending.
+- [x] Q51. Regenerate every headline scalar, table, and figure from one
        immutable aggregation. Current raw medians are approximately
        PCA-FGC 7.29 s, FAISS 307.19 s, cuVS 146.07 s, CAGRA 126.50 s,
        and GGNN 13.58 s at `N=5M,d=8,k=40`; several displayed rounded
-       values/speedups derive from older inputs.
-- [ ] Q52. Correct the memory caption/method. The instrumentation
+       values/speedups derive from older inputs. Completed from the clean
+       later sweeps, including vector figure regeneration.
+- [x] Q52. Correct the memory caption/method. The instrumentation
        subtracts backend-specific output bytes (12 B for
        FastGraph/FAISS/cuVS, 8 B for CAGRA, 4 B for GGNN), not a common
        12 B per neighbour for every backend. Explain output-contract
-       differences or normalize them.
-- [ ] Q53. Keep CAGRA's low-recall explanation observational unless a
+       differences or normalize them. The paper now reports only the
+       synchronized post-call NVML delta; unreliable Python-thread peak
+       samples and derived workspace claims were removed.
+- [x] Q53. Keep CAGRA's low-recall explanation observational unless a
        controlled normalization experiment isolates the cause. Add a
        normalization/metric ablation before recommending a mitigation
-       as established fact.
-- [ ] Q54. Add a phase breakdown supporting "PCA estimation contributes
+       as established fact. The causal diagnosis was removed.
+- [~] Q54. Add a phase breakdown supporting "PCA estimation contributes
        negligibly," or weaken the claim. Add model-level profiling before
        claiming graph construction frequently dominates full model
-       wall-clock.
-- [ ] Q55. Add end-to-end GravNet/model latency and physics-quality
+       wall-clock. Unsupported model-bottleneck and negligible-PCA claims
+       were removed; a phase breakdown/model profile would still add value.
+- [~] Q55. Add end-to-end GravNet/model latency and physics-quality
        evidence, or narrow the title/abstract/conclusion to exact GPU
        kNN construction on detector data rather than geometric deep
-       learning broadly.
+       learning broadly. Claims are now narrowed to a detector-derived
+       kernel stress test; end-to-end validation remains pending.
 - [ ] Q56. Clarify the exactness proof/implementation correspondence:
        bins use one uniform scalar width across axes, and the stopping
        rule uses that width. The proof appears sound under the actual
@@ -424,24 +432,24 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
 
 ### Q4. Claims, related work, and references
 
-- [ ] Q61. Soften unsupported exactness motivation. The manuscript has
+- [x] Q61. Soften unsupported exactness motivation. The manuscript has
        no model study showing approximate neighbours preferentially
        remove boundary edges, create HGCAL physics systematics, or
        explain CMS's use of exact kNN. Keep these as plausible risks, or
        add direct evidence.
-- [ ] Q62. Replace Beyer et al. as the cell-list citation and add the
+- [x] Q62. Replace Beyer et al. as the cell-list citation and add the
        original Verlet/cell-list literature plus a modern GPU
        neighbour-list reference (for example HOOMD-blue).
 - [ ] Q63. Add formal versioned citations for cuVS and all major
        software/data artifacts, with DOI/PID where available. Cite
        foundational PCA/PCA-tree/random-projection work for the
        currently uncited method-history paragraph.
-- [ ] Q64. Correct bibliography metadata:
+- [x] Q64. Correct bibliography metadata:
        `sproull1991refinements` is an Algorithmica journal article;
        the author of `bhattacharya2022gnn` is Saptaparna Bhattacharya;
        and `qasim2021multiparticle` has a published EPJ Web of
        Conferences version and DOI.
-- [ ] Q65. Audit newer exact GPU kNN/tree/grid work before claiming
+- [x] Q65. Audit newer exact GPU kNN/tree/grid work before claiming
        related-work coverage. Rephrase categorical statements such as
        LBVH/ray-tracing methods having "no defined extension" above 3D
        to the narrower claim actually supported by published
@@ -456,14 +464,15 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
        essential. It currently has no evaluation and weakens the focus
        of a PCA-kNN paper; condense/remove it unless the CPC program
        article needs the broader library surface.
-- [ ] Q68. Export line/combo plots as vector PDF/EPS, enlarge panel text,
+- [x] Q68. Export line/combo plots as vector PDF/EPS, enlarge panel text,
        legends, and axis labels, and supply figures as separate source
        files. Current 1600--3000 px PNG plots are below CPC's preferred
-       full-page line-art guidance.
+       full-page line-art guidance. All manuscript plots now have vector
+       PDF outputs with embedded TrueType fonts and no Type 3 fonts.
 - [ ] Q69. Reflow floats to reduce large blank regions on pages 9, 12,
        and 16 and avoid splitting the conclusion awkwardly. Resolve the
        remaining 1.9 pt overfull box.
-- [ ] Q70. Standardize US/British spelling, punctuation around paragraph
+- [x] Q70. Standardize US/British spelling, punctuation around paragraph
        headings, terminology, and capitalization. Enable working
        hyperlinks if allowed by the selected template.
 - [ ] Q71. Complete the venue checklist: Program Summary if CPiP,
@@ -474,13 +483,31 @@ low-to-moderate-dimensional exact GPU kNN, with the new PCA regime at
 
 ### Q6. Verified clean items
 
-- [x] Q72. PDF builds to 16 A4 pages with embedded/subset fonts, no Type
-       3 fonts, no undefined citations/references, and only one minor
-       overfull box.
+- [x] Q72. PDF builds to 18 A4 pages with embedded/subset fonts, no Type
+       3 fonts, and no undefined citations/references. A 1.9 pt
+       class-level output-box overflow and bibliography underfull notices
+       remain visually benign.
 - [x] Q73. The PCA contraction plus shell-termination exactness argument
        is consistent with the released uniform-bin-width implementation;
        no proof-breaking issue was found in this audit.
 - [x] Q74. Source-to-PDF freshness is verified for the audited artifact:
-       `Paper.pdf` was regenerated on 2026-05-29 after the latest
-       `Paper.tex` and bibliography edits and is included in the latest
-       figure-regeneration commit affecting the paper artifact.
+       `Paper.pdf` was regenerated on 2026-07-30 after the latest
+       manuscript, bibliography, and vector-figure edits.
+
+### Q7. Second verifier pass (2026-07-30)
+
+- [x] Q75. Correct recall provenance. The archived broad recall CSV uses
+       the axis kernel and is labeled accordingly. A dedicated PCA-wrapper
+       verifier passed at `d={4,5,8,10}`, `K={16,40,128}`, random PCA
+       subsampling, and multi-segment row splits against FP32 brute force.
+- [x] Q76. Match the bin-count description to the released code's
+       historical occupancy proxy. This heuristic affects performance,
+       not the exactness condition; changing it would require retiming.
+- [x] Q77. Replace the full-eigendecomposition complexity claim with the
+       sampled randomized low-rank fit plus `O(Ndk)` projection cost.
+- [x] Q78. Disclose the deterministic first-row/first-column feature-prefix
+       protocol and remove the causal claim that the `d=5` to `d=6` jump
+       isolates dimensionality or PCA anisotropy. Controls remain Q46-Q47.
+- [x] Q79. Add CPC Program Summary and highlights; add MIT `LICENSE` and
+       `CITATION.cff` to the software package. Immutable archive/DOI and
+       author declarations remain Q44/Q71.
