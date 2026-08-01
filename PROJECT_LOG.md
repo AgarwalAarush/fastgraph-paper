@@ -568,3 +568,9 @@ By author decision, event-aware learned HGCAL coordinates are deferred to
 future work and are not a blocker for this submission. The manuscript keeps
 the current data labeled as a single-segment detector-feature kernel stress
 test and makes no end-to-end model-throughput claim.
+
+## 2026-08-01 — Final-layout preflight
+
+- Rendered and visually inspected every compiled PDF page. Figures, tables, captions, and their introducing discussion are colocated; fonts are embedded and there are no unresolved cross-references or citation warnings.
+- Replaced the forced placement of the main PCA-kNN pseudocode with a top-permitted float. This fills the former blank lower half of page 5 with the complexity discussion while keeping the algorithm at the start of page 6.
+- Removed the Object Condensation helper appendix from the manuscript. It is unrelated to the PCA-subspace exact-kNN contribution and forced a sparse code-only final page; the implementation remains available in the FastGraph source and prior paper history. The focused manuscript now ends after the bibliography at 17 pages.

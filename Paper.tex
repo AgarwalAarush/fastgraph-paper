@@ -538,7 +538,7 @@ the implementation and the proof aligned: projected-space search only
 decides which bins to visit, while exactness is enforced by the
 original-space distance computation.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!t]
 \DontPrintSemicolon
 \KwIn{\texttt{coords}[$n_v$][$n_c$] (original-space $X$), $V_k$, \texttt{binIdx}[$n_v$] (projected-space bins), \texttt{binOffsets}[$n_v$][$n_b{+}1$], \texttt{binBounds}[$n_B$], \texttt{binCounts}[$n_b$], scalar \texttt{binWidth}, $n_v,K,n_c,n_b,n_B$}
 \KwOut{\texttt{neighbors}[$n_v$][$K$] indices including slot 0 self by convention, $r_K^2$ values}
@@ -1297,69 +1297,5 @@ scientific GNNs whose latent spaces have similar spectral structure.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
-
-\appendix
-
-\section{Object Condensation Helper --- Implementation Details}
-\label{app:oc}
-
-In addition to the kNN primitive, the library provides a GPU-resident
-CUDA kernel for the object condensation
-loss~\cite{Kieseler2020ObjectCondensation}, widely used to cluster
-sensor-hit point clouds into particle candidates in physics
-reconstruction. Its training loop requires two dense auxiliary
-index matrices to be recomputed at every forward pass:
-
-\begin{enumerate}
-  \item The \emph{association matrix}
-  $M \in \mathbb{Z}^{n_{\text{unique}} \times n_{\max uq}}$, whose
-  $k$-th row lists the vertex indices assigned to the $k$-th object
-  candidate.
-  \item The optional \emph{complement matrix}
-  $M_{\lnot} \in \mathbb{Z}^{n_{\text{unique}} \times n_{\max rs}}$,
-  listing vertices \emph{not} assigned to the candidate; required
-  only when the repulsive term $m_{\lnot}$ is included in the loss.
-\end{enumerate}
-
-Both matrices must be recomputed every forward pass because the
-predicted associations and the ragged batch layout change from
-iteration to iteration. The CUDA kernel parallelizes over unique
-object candidates, assigning one thread per candidate, eliminating
-atomic operations and thread synchronization and ensuring
-collision-free writes to the output matrices at the cost of
-$O(n_{\text{unique}})$ launched threads per forward pass.
-
-\begin{algorithm}[H]
-\DontPrintSemicolon
-\KwIn{\texttt{asso\_idx}[$n_v$], \texttt{unique\_idx}[$n_u$], \texttt{unique\_rs\_asso}[$n_u$], \texttt{rs}[$n_s{+}1$], $n_v, n_u, n_{\max uq}, n_{\max rs}$, flag \texttt{calc\_m\_not}}
-\KwOut{$M$[$n_u$][$n_{\max uq}$], $M_{\lnot}$[$n_u$][$n_{\max rs}$]}
-$k \leftarrow \texttt{blockIdx.x} \cdot \texttt{blockDim.x} + \texttt{threadIdx.x}$\;
-\If{$k \geq n_u$}{\Return}
-$uq \leftarrow \texttt{unique\_idx}[k]$;\quad
-$split \leftarrow \texttt{unique\_rs\_asso}[k]$;\quad
-$start \leftarrow \texttt{rs}[split]$;\quad
-$end \leftarrow \min(\texttt{rs}[split{+}1],\; n_v)$\;
-\If{$end - start > n_{\max rs}$}{$end \leftarrow start + n_{\max rs}$}
-$fill \leftarrow 0$\;
-\For{$i \leftarrow start$ \KwTo $end-1$}{
-  \If{$\texttt{asso\_idx}[i] = uq$}{
-    $M[k][fill] \leftarrow i$;\quad $fill \leftarrow fill + 1$\;
-    \If{$fill \geq n_{\max uq}$}{\Break}
-  }
-}
-\While{$fill < n_{\max uq}$}{$M[k][fill] \leftarrow -1$;\quad $fill \leftarrow fill + 1$}
-\If{\texttt{calc\_m\_not}}{
-  $fill \leftarrow 0$\;
-  \For{$i \leftarrow start$ \KwTo $end-1$}{
-    \If{$\texttt{asso\_idx}[i] \neq uq$}{
-      $M_{\lnot}[k][fill] \leftarrow i$;\quad $fill \leftarrow fill + 1$\;
-      \If{$fill \geq n_{\max rs}$}{\Break}
-    }
-  }
-  \While{$fill < n_{\max rs}$}{$M_{\lnot}[k][fill] \leftarrow -1$;\quad $fill \leftarrow fill + 1$}
-}
-\caption{CUDA Object Condensation Helper (\texttt{oc\_helper}): one thread per candidate.}
-\label{alg:oc}
-\end{algorithm}
 
 \end{document}
