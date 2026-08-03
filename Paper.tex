@@ -68,37 +68,37 @@
 %% ============================================================
 
 % Per-dimension speedups vs FAISS-GPU IndexFlatL2
-\newcommand{\spdHGCALdtwo}{3.42\ensuremath{\times}}
-\newcommand{\spdHGCALdthree}{2.96\ensuremath{\times}}
-\newcommand{\spdHGCALdfour}{2.30\ensuremath{\times}}
-\newcommand{\spdHGCALdfive}{3.09\ensuremath{\times}}
-\newcommand{\spdHGCALdsix}{10.51\ensuremath{\times}}
-\newcommand{\spdHGCALdseven}{32.50\ensuremath{\times}}
-\newcommand{\spdHGCALdeight}{42.01\ensuremath{\times}}
-\newcommand{\spdHGCALdnine}{31.85\ensuremath{\times}}
-\newcommand{\spdHGCALdten}{34.55\ensuremath{\times}}
+\newcommand{\spdHGCALdtwo}{3.45\ensuremath{\times}}
+\newcommand{\spdHGCALdthree}{3.02\ensuremath{\times}}
+\newcommand{\spdHGCALdfour}{2.35\ensuremath{\times}}
+\newcommand{\spdHGCALdfive}{3.15\ensuremath{\times}}
+\newcommand{\spdHGCALdsix}{10.71\ensuremath{\times}}
+\newcommand{\spdHGCALdseven}{37.17\ensuremath{\times}}
+\newcommand{\spdHGCALdeight}{41.23\ensuremath{\times}}
+\newcommand{\spdHGCALdnine}{35.68\ensuremath{\times}}
+\newcommand{\spdHGCALdten}{32.36\ensuremath{\times}}
 
 % vs cuVS brute force (strongest exact GPU baseline)
 \newcommand{\spdHGCALcuvsdtwo}{1.65\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdfive}{1.48\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdsix}{4.92\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdeight}{19.97\ensuremath{\times}}
-\newcommand{\spdHGCALcuvsdten}{16.58\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdfive}{1.50\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdsix}{4.96\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdeight}{19.41\ensuremath{\times}}
+\newcommand{\spdHGCALcuvsdten}{15.55\ensuremath{\times}}
 
 % vs CAGRA-NN-Descent (approximate GPU baseline, after IVF-PQ fix)
-\newcommand{\spdHGCALcagradtwo}{1.45\ensuremath{\times}}
-\newcommand{\spdHGCALcagradsix}{4.40\ensuremath{\times}}
-\newcommand{\spdHGCALcagradeight}{17.30\ensuremath{\times}}
-\newcommand{\spdHGCALcagradten}{14.07\ensuremath{\times}}
+\newcommand{\spdHGCALcagradtwo}{1.48\ensuremath{\times}}
+\newcommand{\spdHGCALcagradsix}{4.47\ensuremath{\times}}
+\newcommand{\spdHGCALcagradeight}{16.88\ensuremath{\times}}
+\newcommand{\spdHGCALcagradten}{13.56\ensuremath{\times}}
 
 % Geomeans across d=2-10 at N=5M, k=40
-\newcommand{\geoFaiss}{10.1\ensuremath{\times}}
-\newcommand{\geoCuvs}{4.8\ensuremath{\times}}
-\newcommand{\geoCagra}{4.3\ensuremath{\times}}
+\newcommand{\geoFaiss}{10.4\ensuremath{\times}}
+\newcommand{\geoCuvs}{5.0\ensuremath{\times}}
+\newcommand{\geoCagra}{4.4\ensuremath{\times}}
 
 % Reference-cell wall-clocks at d=8, N=5M, k=40
-\newcommand{\fgcPCADeight}{7.3\,s}
-\newcommand{\faissDeight}{307\,s}
+\newcommand{\fgcPCADeight}{7.5\,s}
+\newcommand{\faissDeight}{310\,s}
 \newcommand{\cuvsBFDeight}{146\,s}
 \newcommand{\cagraNNDDeight}{127\,s}
 
@@ -184,8 +184,8 @@ ships with an eager-mode PCA API, an opt-in differentiable
 \texttt{GravNetOp} integration, and an object-condensation helper kernel for particle
 reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
 FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
-$k{=}40$, achieving speedups of up to $42\times$ over FAISS-GPU,
-$20\times$ over cuVS brute force, and $17\times$ over approximate
+$k{=}40$, achieving speedups of up to $41\times$ over FAISS-GPU,
+$19\times$ over cuVS brute force, and $17\times$ over approximate
 CAGRA while retaining
 exact neighbor sets under the paper's distance-based convention.
 \end{abstract}
@@ -659,19 +659,18 @@ All GPU experiments use a single NVIDIA A100 80\,GB PCIe with CUDA
 compiled from the manuscript's \texttt{paper-release} branch.
 
 \paragraph*{Timing protocol.}
-All comparative HGCAL timing plots and the headline table use the later,
-serialized \texttt{--gres=mps:100} sweeps only; older
-\texttt{mps:50} and exclusive-allocation rows are excluded. FastGraph,
-FAISS, cuVS BF, and GGNN have seven repetitions per plotted cell, and the
-dedicated full CAGRA-NN-Descent sweep has three. All timed regions are
-bracketed by device synchronization. FastGraph and GGNN receive
-GPU-resident coordinates, whereas the FAISS, cuVS, and CAGRA runners begin
-with NumPy input and include host-to-device conversion in addition to
-index construction and search. The resulting values are runner-level
-graph-construction times, not isolated kernel times; this input-path
-asymmetry is a limitation of the archived benchmark harness. Figures and
-scalar comparisons report medians across successful repetitions; error
-bars show the interquartile range.
+All comparative HGCAL timing plots and the headline table use the completed
+matched-input, serialized \texttt{--gres=mps:100} campaign only; older
+\texttt{mps:50} and exclusive-allocation rows are excluded. Every backend
+has three repetitions per completed plotted cell. Inputs are copied to a
+Torch CUDA tensor before timing: FastGraph and GGNN consume that tensor
+directly, FAISS uses its Torch bridge, and cuVS BF and CAGRA use a
+pointer-identical CuPy DLPack view created before the timer. The timed
+region therefore includes index construction and search, but excludes data
+loading and host-to-device transfer for every backend. All timed regions are
+bracketed by device synchronization. Figures and scalar comparisons report
+medians across successful repetitions; error bars show the interquartile
+range.
 
 \paragraph*{CAGRA build path.}
 CAGRA's default IVF-PQ build path fails on the benchmark data at $d \ge 5$
@@ -730,17 +729,17 @@ heterogeneous-scale pathology of HGCAL.
   \toprule
   $d$ & FAISS & cuVS & CAGRA & GGNN \\
   \midrule
-  2  & 3.42$\times$  & 1.65$\times$  & 1.45$\times$  & 0.32$\times$ \\
-  3  & 2.96$\times$  & 1.43$\times$  & 1.28$\times$  & 0.28$\times$ \\
-  4  & 2.30$\times$  & 1.12$\times$  & 0.98$\times$  & 0.22$\times$ \\
-  5  & 3.09$\times$  & 1.48$\times$  & 1.39$\times$  & 0.28$\times$ \\
-  6  & 10.51$\times$ & 4.92$\times$  & 4.40$\times$  & 0.49$\times$ \\
-  7  & 32.50$\times$ & 15.50$\times$ & 13.57$\times$ & 1.38$\times$ \\
-  8  & 42.01$\times$ & 19.97$\times$ & 17.30$\times$ & 1.86$\times$ \\
-  9  & 31.85$\times$ & 15.23$\times$ & 13.20$\times$ & 1.40$\times$ \\
-  10 & 34.55$\times$ & 16.58$\times$ & 14.07$\times$ & 1.52$\times$ \\
+  2  & 3.45$\times$  & 1.65$\times$  & 1.48$\times$  & 0.32$\times$ \\
+  3  & 3.02$\times$  & 1.45$\times$  & 1.30$\times$  & 0.28$\times$ \\
+  4  & 2.35$\times$  & 1.13$\times$  & 1.02$\times$  & 0.22$\times$ \\
+  5  & 3.15$\times$  & 1.50$\times$  & 1.38$\times$  & 0.28$\times$ \\
+  6  & 10.71$\times$ & 4.96$\times$  & 4.47$\times$  & 0.50$\times$ \\
+  7  & 37.17$\times$ & 17.52$\times$ & 15.24$\times$ & 1.57$\times$ \\
+  8  & 41.23$\times$ & 19.41$\times$ & 16.88$\times$ & 1.81$\times$ \\
+  9  & 35.68$\times$ & 17.13$\times$ & 14.79$\times$ & 1.59$\times$ \\
+  10 & 32.36$\times$ & 15.55$\times$ & 13.56$\times$ & 1.44$\times$ \\
   \midrule
-  geo. & 10.1$\times$ & 4.8$\times$ & 4.3$\times$ & 0.63$\times$ \\
+  geo. & 10.4$\times$ & 5.0$\times$ & 4.4$\times$ & 0.64$\times$ \\
   \bottomrule
   \end{tabular}
   \end{minipage}
@@ -1260,8 +1259,8 @@ $k{=}40$ operating
 point, FastGraph is the fastest among the tested dimension-general
 \emph{exact} GPU
 $k$NN baselines at every tested dimension, with speedups up to
-$42\times$ over
-FAISS-GPU \texttt{IndexFlatL2}, $20\times$ over cuVS brute force
+$41\times$ over
+FAISS-GPU \texttt{IndexFlatL2}, $19\times$ over cuVS brute force
 (the strongest exact GPU baseline), and $17\times$ over the
 approximate CAGRA-NN-Descent build---the CAGRA path that completed the
 full $d{=}2$--$10$ sweep in our harness. The ablation

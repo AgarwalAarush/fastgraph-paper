@@ -574,3 +574,23 @@ test and makes no end-to-end model-throughput claim.
 - Rendered and visually inspected every compiled PDF page. Figures, tables, captions, and their introducing discussion are colocated; fonts are embedded and there are no unresolved cross-references or citation warnings.
 - Replaced the forced placement of the main PCA-kNN pseudocode with a top-permitted float. This fills the former blank lower half of page 5 with the complexity discussion while keeping the algorithm at the start of page 6.
 - Removed the Object Condensation helper appendix from the manuscript. It is unrelated to the PCA-subspace exact-kNN contribution and forced a sparse code-only final page; the implementation remains available in the FastGraph source and prior paper history. The focused manuscript now ends after the bibliography at 17 pages.
+
+
+## 2026-08-03 — Matched-input MPS:100 campaign completed and paper refreshed
+
+The serialized jobs 29316--29327 completed on 2026-08-02. The five final
+CSV files contain 1,302 successful measurements: 294 rows each for
+FastGraph, FAISS, cuVS brute force, and GGNN, plus 126 rows for CAGRA with
+NN-Descent. Every row records
+`preloaded_torch_cuda_zero_copy`; no timing row has a non-`ok` status. The
+campaign used `--gres=mps:100` and kept jobs serialized, so the previous
+allocation and host-to-device-transfer asymmetries no longer apply to the
+HGCAL cross-method figures.
+
+`make_paper_plots_v4.py` now reads only the five matched-input CSVs for its
+HGCAL figures. The manuscript figures, table, timing protocol, and numerical
+macros were regenerated from median values. At the headline N=5M, k=40
+cells, FastGraph remains fastest among the tested exact GPU backends at every
+d=2--10, with peak ratios of 41.23x over FAISS, 19.41x over cuVS BF, and
+16.88x over CAGRA-NN-Descent. The paper was recompiled to 17 pages; page
+images, embedded fonts, references, and figure placement were checked.
