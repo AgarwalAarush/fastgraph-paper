@@ -12,7 +12,7 @@ FastGraph is the **fastest exact GPU $k$-nearest-neighbor method** in
 the $d \in [4, 10]$ regime on detector data, the deployment regime for
 HEP-GNN dynamic graph layers in HGCAL reconstruction. Headline
 geomean speedups over the next-best exact GPU baseline (cuVS BF):
-**$\sim 4.8\times$**; over FAISS-GPU: $\sim 10\times$; over
+**$5.0\times$**; over FAISS-GPU: $10.4\times$; over
 CAGRA-nn-descent: $\sim 4.4\times$.
 
 Three honest caveats are documented throughout, not buried:
@@ -40,25 +40,28 @@ artifacts (`*.aux`, `*.bbl`, `*.blg`, `*.log`, etc.) are gitignored;
 
 ## Companion repositories
 
-Reproducibility is split across four repositories. They migrated to
-owned remotes on 2026-05-23 (see `PROJECT_LOG.md`).
+Reproducibility is split across five repositories. Every repository below is
+frozen at the immutable `pca-fgc-paper-v1.0.0` tag for this submission.
 
 | Repository | Purpose |
 |---|---|
-| [`AgarwalAarush/FastGraphCompute`](https://github.com/AgarwalAarush/FastGraphCompute) | FastGraph library source (fork of [`jkiesele/FastGraphCompute`](https://github.com/jkiesele/FastGraphCompute)). Headline numbers were collected at branch `paper-release`, tag `v1.0-paper`, commit `011d295`, built against the CUDA 12.1 toolchain. |
+| [`AgarwalAarush/FastGraphCompute`](https://github.com/AgarwalAarush/FastGraphCompute) | FastGraph library source (fork of [`jkiesele/FastGraphCompute`](https://github.com/jkiesele/FastGraphCompute)), built from its `paper-release` branch with CUDA 12.1. |
 | [`AgarwalAarush/fgc-performance`](https://github.com/AgarwalAarush/fgc-performance) | Benchmark harness, queue files, generator scripts, SLURM wrappers, and every per-backend timing CSV used to draw the figures. |
 | [`AgarwalAarush/FastGraph-Plotting`](https://github.com/AgarwalAarush/FastGraph-Plotting) | Plot generation. `make_paper_plots_v4.py` produces the 13 figures `Paper.tex` references from the canonical CSVs. |
 | [`AgarwalAarush/clover-knn`](https://github.com/AgarwalAarush/clover-knn) | CLOVER fork with the CMU Falcon A100 build, $k{=}40$ alignment, and the mesh-path runner used in §5.6 (Figure 9). Fork of [`ampslab/clover-knn`](https://github.com/ampslab/clover-knn). |
 
 ## Reproducing the numbers
 
-1. Install FastGraph from the `v1.0-paper` tag of the FastGraphCompute
+1. Install FastGraph from the `pca-fgc-paper-v1.0.0` tag of the FastGraphCompute
    fork into a fresh conda env (CUDA 12.1 toolchain).
 2. Clone `fgc-performance` and place the HGCAL recHits feature file
    ($\sim$43 GB; internal to CMS; external parties contact the
    corresponding author).
-3. Run `bash run_all.sh` (or `sbatch run_all_slurm.sh` on SLURM). Each
-   backend writes one row per `(d, N, k)` cell to its CSV.
+3. The final paper figures use the completed `gpu_matched_input_*.csv` files,
+   collected in a serialized `--gres=mps:100` campaign with the same
+   GPU-resident input protocol for every backend. To repeat the campaign on
+   an approved HGCAL installation, use `prepare_matched_input_queues.sh` and
+   `submit_matched_input_campaign.sh` in `fgc-performance`.
 4. Clone `FastGraph-Plotting`, run
    `python make_paper_plots_v4.py`, copy the outputs to `media/`,
    recompile `Paper.tex`.
@@ -67,23 +70,20 @@ The synthetic-data plots use seeded `numpy.random.default_rng(SEED)`
 draws — fully reproducible without HGCAL access; see
 `synthetic_pca_benchmark_binA.py` in `fgc-performance`.
 
-## Status and pending work
+## Release status
 
-Living edit list at `PAPER_CHANGES.md`. Most items through `v4.2` are
-landed. Two pending items (your call to add):
-
-- **O38**: systematic-study text in Limitations citing
-  `zugner2018adversarial` and `klicpera2019diffusion` to motivate
-  exact-kNN deployment in GNN inference.
-- **O39**: brief future-direction mention of hybrid PCA-LBVH /
-  PCA-BVH for handling spatial-occupancy skew.
+This repository contains the submission-ready 17-page PDF. The source,
+matched-input data, plotting code, and comparison fork are pinned by the
+release tag above. Event-aware learned HGCAL coordinates and end-to-end model
+throughput are explicitly future work; they are not inputs to the present
+kernel benchmark claim.
 
 ## Layout summary
 
 ```
 .
 ├── Paper.tex                    # main source, ~1400 lines
-├── Paper.pdf                    # compiled release artifact (21 pp.)
+├── Paper.pdf                    # compiled release artifact (17 pp.)
 ├── references.bib               # bibliography
 ├── media/                       # 13 figures used by Paper.tex
 │   ├── gpu_fgc_dimensional_scaling_5M_k40_all_algorithms.png
