@@ -594,3 +594,21 @@ cells, FastGraph remains fastest among the tested exact GPU backends at every
 d=2--10, with peak ratios of 41.23x over FAISS, 19.41x over cuVS BF, and
 16.88x over CAGRA-NN-Descent. The paper was recompiled to 17 pages; page
 images, embedded fonts, references, and figure placement were checked.
+
+
+## 2026-08-13 — Public reproducibility release frozen
+
+The five repositories used by the submission now have an annotated,
+immutable `pca-fgc-paper-v1.0.0` tag: FastGraphCompute at `dde4b38`,
+fgc-performance at `c51a290`, FastGraph-Plotting at `3f909f2`,
+fastgraph-paper at `696333e`, and the CLOVER comparison fork at `a224373`.
+Release documentation was corrected to describe the final matched-input
+MPS:100 campaign and current 17-page manuscript. GitHub Releases and Zenodo
+DOI publication require a one-time authenticated GitHub/Zenodo account
+session; this Falcon environment has SSH push access but no GitHub API or
+browser authentication.
+
+A private Google Drive folder was created for the CMS-restricted HGCAL source
+and ignored correctness tensors. Because the Drive connector limits individual
+uploads to 512 MiB, CPU jobs 31509 and 31510 calculate source checksums and
+create a 480 MiB chunked archive with per-chunk checksums before upload.
