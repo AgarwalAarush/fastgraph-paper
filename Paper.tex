@@ -253,7 +253,7 @@ sit in the $d{=}4$--$10$ range. EdgeConv~\cite{wang2019dynamic} and
 ParticleNet~\cite{qu2020particlenet} also rebuild feature-space graphs,
 but later layers may operate at substantially higher dimensionality and
 are outside the primary regime evaluated here. This
-\emph{small-but-not-tiny} regime is precisely where neither generic
+\emph{low-to-moderate-dimensional} regime is precisely where neither generic
 high-dimensional ANN libraries nor brute-force GPU $k$NN are an ideal
 fit: ANN libraries introduce unfavorable overheads, and brute force
 scales as $N^2 d$ regardless of how much spatial structure the latent
@@ -308,7 +308,7 @@ neighbor indices are treated as constants in the backward pass.
 \texttt{GravNetOp}~\cite{Qasim2019GravNet} exposes PCA-subspace neighbor
 selection through \texttt{use\_pca=True} in eager mode. A GPU-resident
 object-condensation helper~\cite{Kieseler2020ObjectCondensation} is also
-provided and described in the appendix.
+provided as a separate library utility.
 
 \section{Related Work}
 \label{sec:related-work}
@@ -662,7 +662,8 @@ compiled from the manuscript's \texttt{paper-release} branch.
 All comparative HGCAL timing plots and the headline table use the completed
 matched-input, serialized \texttt{--gres=mps:100} campaign only; older
 \texttt{mps:50} and exclusive-allocation rows are excluded. Every backend
-has three repetitions per completed plotted cell. Inputs are copied to a
+has seven repetitions per completed plotted cell for FastGraph/PCA, FAISS,
+cuVS BF, and GGNN; CAGRA-NN-Descent has three. Inputs are copied to a
 Torch CUDA tensor before timing: FastGraph and GGNN consume that tensor
 directly, FAISS uses its Torch bridge, and cuVS BF and CAGRA use a
 pointer-identical CuPy DLPack view created before the timer. The timed
@@ -1114,8 +1115,8 @@ and the per-call projection $V_k$ are held fixed across the
 forward-backward pair so that the gradients are deterministic within
 a step. Object condensation~\cite{Kieseler2020ObjectCondensation},
 which is the loss used together with GravNet for HGCAL
-reconstruction, is supported through a separate GPU-resident helper
-kernel described in the appendix.
+reconstruction, is supported through a separate GPU-resident library
+helper.
 
 \section{Limitations}
 \label{sec:limitations}
@@ -1218,11 +1219,10 @@ The FastGraph library repository, including the PCA-subspace extension
 described in this paper, is available at
 \url{https://github.com/AgarwalAarush/FastGraphCompute}, as a fork of
 the upstream \texttt{FastGraphCompute} library.
-The source used for the manuscript is maintained on the
-\texttt{paper-release} branch and built against the CUDA 12.1
-toolchain. The submission archive will pin the exact code and benchmark
-commits and provide a persistent identifier; until that archive is
-created, the moving branch URLs are not immutable artifacts. The kernel surface covers binning subspace size
+The immutable \texttt{pca-fgc-paper-v1.0.1} release tags pin the exact
+FastGraph, benchmark-harness, plotting, manuscript, and CLOVER-fork
+revisions used for this submission; the release is built against the CUDA
+12.1 toolchain. The kernel surface covers binning subspace size
 $k \in \{2, 3, 4, 5\}$. The benchmarking harness and runner scripts
 used to produce the figures live in a companion repository,
 \url{https://github.com/AgarwalAarush/fgc-performance}. The CLOVER

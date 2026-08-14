@@ -612,3 +612,19 @@ A private Google Drive folder was created for the CMS-restricted HGCAL source
 and ignored correctness tensors. Because the Drive connector limits individual
 uploads to 512 MiB, CPU jobs 31509 and 31510 calculate source checksums and
 create a 480 MiB chunked archive with per-chunk checksums before upload.
+
+## 2026-08-14 - Final review corrections and Object Condensation validation
+
+An independent final review found no major paper, formatting, citation, or
+figure-placement issue. The manuscript now reports the actual timing
+repetition counts (seven for FastGraph/PCA, FAISS, cuVS BF, and GGNN; three
+for CAGRA-NN-Descent), calls the target regime
+low-to-moderate-dimensional, removes stale references to a nonexistent Object
+Condensation appendix, and replaces the provisional availability wording with
+the immutable release-tag policy.
+
+The Object Condensation helper remains a separate FastGraph library utility;
+it is not a benchmarked contribution of this PCA-kNN paper. A fixture lookup
+in its large-scale tests was made independent of the caller's working
+directory. The focused CUDA suite covering the helper and object-condensation
+utilities passed: 26 tests passed in 8.46 seconds on 2026-08-14.
