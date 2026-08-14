@@ -628,3 +628,19 @@ it is not a benchmarked contribution of this PCA-kNN paper. A fixture lookup
 in its large-scale tests was made independent of the caller's working
 directory. The focused CUDA suite covering the helper and object-condensation
 utilities passed: 26 tests passed in 8.46 seconds on 2026-08-14.
+
+## 2026-08-14 - Clean public reproducibility release
+
+The `pca-fgc-paper-v1.1.0` release separates the public paper workflow from
+the preserved research history. The benchmark repository now exposes a
+checksummed `reproduction/` package containing the canonical figure inputs,
+validated queue configurations, matched-input MPS:100 scripts, synthetic
+generators, verification utilities, and the paper plotting program. Earlier
+calibrations and exploratory artifacts remain available under `archive/legacy/`.
+
+The paper repository is the central reproduction landing page, the plotting
+repository is explicitly retained as a legacy archive, and the CLOVER fork is
+documented as a third-party comparison dependency. All 16 canonical result
+files passed SHA-256 verification; the integrated plotting workflow regenerated
+the full figure set from the new layout; and the manuscript was rebuilt to 17
+pages with no unresolved references.
