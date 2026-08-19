@@ -644,3 +644,26 @@ documented as a third-party comparison dependency. All 16 canonical result
 files passed SHA-256 verification; the integrated plotting workflow regenerated
 the full figure set from the new layout; and the manuscript was rebuilt to 17
 pages with no unresolved references.
+
+## 2026-08-19 - Hardened software release and version alignment
+
+FastGraphCompute package version 1.2.0 manually integrates the five required
+upstream hardening changes while preserving the PCA-specific dispatch and
+fused scatter implementation: current-stream launches, active-stream
+row-split transfer ordering, CUDA device guards, same-device validation, and
+Object Condensation bounds and optional-output fixes. Regression work also
+corrected the custom C++ autograd save condition and allowed a CUDA-built
+checkout to register its operators on a node without a visible GPU.
+
+The non-duplicated A100 suite passed 67 tests with one two-GPU test skipped;
+the final hardening file passed six tests with the same conditional skip. A
+no-GPU CPU allocation passed 47 tests with 22 CUDA tests skipped. Every CUDA
+extension also completed an isolated `sm_90` compile-only build. Runtime
+validation on `cuda:1` and H100 remains pending because those hardware
+configurations were not available in the validation allocations.
+
+The manuscript and all public reproduction pointers now use the immutable
+`pca-fgc-paper-v1.2.0` release identity, and the availability statement reports
+FastGraphCompute package version 1.2.0. The PDF rebuilt successfully to 17
+pages with embedded fonts, no unresolved references or citations, and a clean
+visual check of the updated availability and conclusion pages.
