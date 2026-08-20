@@ -1,4 +1,4 @@
 - PCA replaces fixed-coordinate binning for exact GPU kNN in dimensions 4-10.
 - A contractive projection prunes bins while distances remain full-dimensional.
-- FastGraph builds a 5M-point, d=8, k=40 graph in 7.3 s on one A100.
+- FastGraph builds a 5M-point, d=8, k=40 graph in 7.5 s on one A100.
 - The PyTorch API exposes opt-in PCA neighbor construction in GravNetOp.
