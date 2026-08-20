@@ -181,8 +181,7 @@ FastGraph method with a data-adaptive orthonormal subspace while preserving
 exact neighbor sets, improving uniform-grid pruning in the $d{=}4$--$10$
 regime targeted by modern HGCAL reconstruction models. The implementation is GPU-resident end to end and
 ships with an eager-mode PCA API, an opt-in differentiable
-\texttt{GravNetOp} integration, and an object-condensation helper kernel for particle
-reconstruction workflows. On a 5\,M-point CMS HGCAL recHit workload,
+\texttt{GravNetOp} integration. On a 5\,M-point CMS HGCAL recHit workload,
 FastGraph builds the exact graph in \fgcPCADeight\ at $d{=}8$,
 $k{=}40$, achieving speedups of up to $41\times$ over FAISS-GPU,
 $19\times$ over cuVS brute force, and $17\times$ over approximate
@@ -191,44 +190,10 @@ exact neighbor sets under the paper's distance-based convention.
 \end{abstract}
 
 \begin{keyword}
-Graph Neural Networks \sep $k$-Nearest Neighbors \sep GPU Acceleration \sep CUDA \sep PCA \sep Object Condensation \sep Particle Physics
+Graph Neural Networks \sep $k$-Nearest Neighbors \sep GPU Acceleration \sep CUDA \sep PCA \sep Particle Physics
 \end{keyword}
 
 \end{frontmatter}
-
-\section*{Program Summary}
-\begin{description}[style=nextline,leftmargin=0pt,labelindent=0pt,labelwidth=0pt,labelsep=0pt]
-\item[Program title:] FastGraphCompute
-\item[CPC Library link to program files:] To be added by the Technical Editor
-\item[Developer's repository link:] \url{https://github.com/AgarwalAarush/FastGraphCompute}
-\item[Licensing provisions:] MIT License
-\item[Programming language:] Python, C++, CUDA
-\item[Supplementary material:] Source archive, installation instructions,
-tests, and executable examples
-\item[Nature of problem:]
-Dynamic graph neural networks repeatedly construct $k$-nearest-neighbor
-graphs from GPU-resident coordinate tensors. Exact dense methods require
-quadratic distance work, while classical cell-list implementations become
-impractical when their uniform grid spans too many input dimensions. The
-target is exact graph construction for ragged, low-to-moderate-dimensional
-point sets without materializing the full pairwise distance matrix.
-\item[Solution method:]
-FastGraphCompute estimates a compact principal-component subspace and
-uses it only to assign points to a uniform grid and prune unvisited bins.
-Candidate distances are evaluated in the original coordinate space. Since
-the orthonormal partial projection is contractive, the projected-space
-stopping condition remains a valid lower bound on full-space distance.
-The implementation is exposed as a PyTorch CUDA extension with eager-mode
-PCA and optional integration into \texttt{GravNetOp}.
-\item[Restrictions and unusual features:]
-The released PCA path requires an NVIDIA GPU, CUDA 12.1, and PyTorch 2.5;
-it currently targets a single GPU and uses eager mode because
-\texttt{torch.pca\_lowrank} is not TorchScript compatible. The CUDA release
-instantiates two through five binning dimensions. Neighbor indices are
-discrete; gradients are provided through the selected squared distances
-and input coordinates. Performance depends on projected-space density,
-and the worst case approaches brute force.
-\end{description}
 
 \section{Introduction}
 
@@ -244,7 +209,7 @@ every forward and backward pass, and its construction cost can be a
 substantial component of a model step. Establishing that fraction for
 the target HGCAL models requires end-to-end profiling and is outside
 the kernel study reported here. Importantly, the latent
-dimensionality in the target application is small but not trivially so: the original
+dimensionality in the target application is low-to-moderate-dimensional: the original
 GravNet layer for HGCAL reconstruction~\cite{Qasim2019GravNet} uses
 $d{=}4$ for the learned space in which the kNN is taken, and recent
 multi-particle and object-condensation variants used in CMS HGCAL
@@ -306,9 +271,7 @@ remains callable from TorchScript, while the PCA wrapper uses eager-mode
 (selected squared distances, query coordinates) while the hard
 neighbor indices are treated as constants in the backward pass.
 \texttt{GravNetOp}~\cite{Qasim2019GravNet} exposes PCA-subspace neighbor
-selection through \texttt{use\_pca=True} in eager mode. A GPU-resident
-object-condensation helper~\cite{Kieseler2020ObjectCondensation} is also
-provided as a separate library utility.
+selection through \texttt{use\_pca=True} in eager mode.
 
 \section{Related Work}
 \label{sec:related-work}
@@ -1219,7 +1182,7 @@ The FastGraph library repository, including the PCA-subspace extension
 described in this paper, is available at
 \url{https://github.com/AgarwalAarush/FastGraphCompute}, as a fork of
 the upstream \texttt{FastGraphCompute} library.
-The immutable \texttt{pca-fgc-paper-v1.2.0} release tags pin the exact
+The immutable \texttt{pca-fgc-paper-v1.3.0} release tags pin the exact
 FastGraph, benchmark-harness, plotting, manuscript, and CLOVER-fork
 revisions used for this submission; the release is built against the CUDA
 12.1 toolchain and reports FastGraphCompute package version \texttt{1.2.0}.

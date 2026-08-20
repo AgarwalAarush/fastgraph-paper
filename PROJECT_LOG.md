@@ -667,3 +667,8 @@ The manuscript and all public reproduction pointers now use the immutable
 FastGraphCompute package version 1.2.0. The PDF rebuilt successfully to 17
 pages with embedded fonts, no unresolved references or citations, and a clean
 visual check of the updated availability and conclusion pages.
+
+
+## 2026-08-20 — CPC Computational Physics Paper submission snapshot
+
+Converted the final manuscript from the CPiP presentation to the CPC Computational Physics Paper article type. Removed the CPiP-only Program Summary and unrelated Object Condensation helper mentions, retained the tested eager GravNet PCA integration, and tightened the target wording to low-to-moderate-dimensional. The rebuilt 16-page PDF has embedded fonts, valid PDF syntax, and no unresolved references or citations. The pca-fgc-paper-v1.3.0 tags preserve this final manuscript together with the unchanged FastGraphCompute, benchmark, plotting, and CLOVER revisions.
