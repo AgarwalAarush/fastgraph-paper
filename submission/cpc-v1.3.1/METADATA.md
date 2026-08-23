@@ -19,23 +19,23 @@ PyTorch-integrated primitive for exact kNN graph construction in
 low-to-moderate-dimensional learned spaces. The core contribution is a
 PCA-subspace cell-list formulation: FastGraph fits a compact binning
 coordinate system to the input coordinate tensor and uses that subspace for
-spatial pruning, while evaluating candidate distances in the original feature
-space. This replaces fixed coordinate-axis binning with a data-adaptive
-orthonormal subspace while preserving exact neighbor sets, improving
-uniform-grid pruning in the d=4-10 regime targeted by modern HGCAL
-reconstruction models. The implementation is GPU-resident end to end and
-ships with an eager-mode PCA API and opt-in differentiable GravNetOp
-integration. On a 5 million-point CMS HGCAL recHit workload, FastGraph builds
-the exact graph in 7.5 s at d=8 and k=40, achieving speedups of up to 41x
-over FAISS-GPU, 19x over cuVS brute force, and 17x over approximate CAGRA
-while retaining exact neighbor sets under the paper's distance-based
-convention.
+spatial pruning, and evaluates all candidate distances in the original feature
+space. This replaces the fixed coordinate-axis binning of the original
+FastGraph method with a data-adaptive orthonormal subspace while preserving
+exact neighbor sets, improving uniform-grid pruning in the d=4-10 regime
+targeted by modern HGCAL reconstruction models. The implementation is
+GPU-resident end to end and ships with an eager-mode PCA API, an opt-in
+differentiable GravNetOp integration. On a 5 M-point CMS HGCAL recHit
+workload, FastGraph builds the exact graph in 7.5 s at d=8, k=40, achieving
+speedups of up to 41x over FAISS-GPU, 19x over cuVS brute force, and 17x over
+approximate CAGRA while retaining exact neighbor sets under the paper's
+distance-based convention.
 
 ## Authors
 
 | Author | Affiliation | Email | Portal details still needed |
 | --- | --- | --- | --- |
-| Aarush Agarwal | Carnegie Mellon University, Pittsburgh, PA, USA | aarushaga@andrew.cmu.edu | ORCID if available |
+| Aarush Agarwal | Carnegie Mellon University, Pittsburgh, PA, USA | aarusha@andrew.cmu.edu | ORCID if available |
 | Raymond He | Carnegie Mellon University, Pittsburgh, PA, USA | rhe2@andrew.cmu.edu | ORCID if available |
 | Jan Kieseler | Karlsruhe Institute of Technology, Karlsruhe, Germany | jan.kieseler@cern.ch | ORCID if available |
 | Matteo Cremonesi | Carnegie Mellon University, Pittsburgh, PA, USA | mcremone@andrew.cmu.edu | Corresponding author; postal address, phone, ORCID |
