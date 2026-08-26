@@ -672,3 +672,16 @@ visual check of the updated availability and conclusion pages.
 ## 2026-08-20 — CPC Computational Physics Paper submission snapshot
 
 Converted the final manuscript from the CPiP presentation to the CPC Computational Physics Paper article type. Removed the CPiP-only Program Summary and unrelated Object Condensation helper mentions, retained the tested eager GravNet PCA integration, and tightened the target wording to low-to-moderate-dimensional. The rebuilt 16-page PDF has embedded fonts, valid PDF syntax, and no unresolved references or citations. The pca-fgc-paper-v1.3.1 tags preserve this final manuscript together with the unchanged FastGraphCompute, benchmark, plotting, and CLOVER revisions.
+
+
+## 2026-08-25 - Required generative-AI disclosure and CPC v1.3.2 package
+
+Added the Elsevier-required declaration of generative AI and AI-assisted
+technologies immediately before the bibliography. The statement discloses
+OpenAI Codex use for language editing, software review, and reproducibility
+checks, and states that the authors reviewed and edited the output and accept
+full responsibility for the article. Rebuilt the 16-page PDF, verified its
+fonts and PDF syntax, and created the matching CPC source archive
+`FastGraph-CPC-CP-v1.3.2-source.zip` with a verified SHA-256 manifest. The
+v1.3.2 tag set preserves the same code, benchmark, plotting, and CLOVER
+revisions as v1.3.1, with this manuscript-only disclosure update.

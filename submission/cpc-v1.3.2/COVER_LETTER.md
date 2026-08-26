@@ -19,7 +19,7 @@ The contribution is appropriate for CPC because it combines a new
 computational method, its GPU implementation, reproducible public benchmark
 artifacts, and a substantive particle-physics workload. The exact source,
 benchmark harness, plotting workflow, and manuscript are pinned by immutable
-`pca-fgc-paper-v1.3.1` tags. Restricted CMS inputs are clearly identified;
+`pca-fgc-paper-v1.3.2` tags. Restricted CMS inputs are clearly identified;
 public result inputs and seeded synthetic reproduction are available.
 
 A related original FastGraph preprint (arXiv:2511.10442) is cited and

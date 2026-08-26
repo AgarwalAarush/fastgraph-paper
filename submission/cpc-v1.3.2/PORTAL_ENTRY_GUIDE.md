@@ -29,7 +29,7 @@ may appear in addition to the standard flow below.
 2. Select **Submit New Manuscript** and then select article type
    **Computational Physics Paper**.
 3. Upload the source bundle first and designate it **Manuscript**:
-   `/home/export/aarusha/tmp/FastGraph-CPC-CP-v1.3.1-source.zip`
+   `/home/export/aarusha/tmp/FastGraph-CPC-CP-v1.3.2-source.zip`
 4. Add `highlights.txt` as **Highlights**.
 5. Add the cover letter if the portal provides a Cover Letter file type;
    otherwise paste its text into the Comments to the Editor field.
@@ -109,14 +109,14 @@ and Manuscript Data. CPC may add, remove, or reorder questions.
 
 | Portal item type | File or text | Entry |
 | --- | --- | --- |
-| Manuscript | Source archive | `/home/export/aarusha/tmp/FastGraph-CPC-CP-v1.3.1-source.zip` |
+| Manuscript | Source archive | `/home/export/aarusha/tmp/FastGraph-CPC-CP-v1.3.2-source.zip` |
 | Highlights | Editable text file | `highlights.txt` |
 | Cover Letter | If offered | `COVER_LETTER.md`, after its placeholders are confirmed |
 | Competing Interest Declaration | Only if the portal requires a file/template | Complete the CPC template with the confirmed declaration |
 | PDF | Only if explicitly requested | `Paper.pdf` |
 
 The source archive was checked with `unzip -t`; its SHA-256 is
-`bc72b0fb7404d54f52c63be035601a2e1a8e5f48c0d565553dc291b0087b7bd9`.
+`4946e9e7ba9627ba0bb885da3c15a6e50e18c660436588c59bc8ec7a525794e7`.
 Do not add figures one by one unless the portal rejects the source archive.
 
 ### General Information
@@ -153,13 +153,13 @@ This research did not receive any specific grant from funding agencies in the pu
 **Generative-AI disclosure, if asked and approved:**
 
 ```text
-During preparation of this work, the authors used OpenAI Codex to assist with language editing, software review, and reproducibility checks. After using this tool, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication. No generative-AI tool was used to fabricate, alter, or generate research data, numerical results, or figures.
+During the preparation of this work, the authors used OpenAI Codex for language editing, software review, and reproducibility checks. The authors reviewed and edited the output as needed and take full responsibility for the content of the published article.
 ```
 
 **Data and code availability:**
 
 ```text
-The FastGraph library, including the PCA-subspace extension described in this paper, is publicly available at https://github.com/AgarwalAarush/FastGraphCompute. The immutable pca-fgc-paper-v1.3.1 tags pin the exact library, benchmark harness, plotting, manuscript, and CLOVER comparison-fork revisions used for this submission. The public benchmark repository contains checked result CSVs, figure-generation code, configurations, and seeded synthetic reproduction. The CMS HGCAL recHit features are collaboration-restricted and cannot be released; they are not required to reproduce the checked-in figures.
+The FastGraph library, including the PCA-subspace extension described in this paper, is publicly available at https://github.com/AgarwalAarush/FastGraphCompute. The immutable pca-fgc-paper-v1.3.2 tags pin the exact library, benchmark harness, plotting, manuscript, and CLOVER comparison-fork revisions used for this submission. The public benchmark repository contains checked result CSVs, figure-generation code, configurations, and seeded synthetic reproduction. The CMS HGCAL recHit features are collaboration-restricted and cannot be released; they are not required to reproduce the checked-in figures.
 ```
 
 **Related preprint, if asked:**
@@ -189,7 +189,7 @@ Verify every extracted or entered value against this guide and the manuscript:
 - title and abstract match exactly;
 - all six keywords are present;
 - affiliations are correctly linked to authors;
-- public repositories use the immutable `pca-fgc-paper-v1.3.1` tag;
+- public repositories use the immutable `pca-fgc-paper-v1.3.2` tag;
 - restricted HGCAL data are described as unavailable, not uploaded.
 
 ## Final Checks Before Submit

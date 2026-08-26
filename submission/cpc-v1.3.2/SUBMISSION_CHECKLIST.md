@@ -7,7 +7,7 @@
 - [x] PDF syntax, references, citations, figures, and source bundle checked.
 - [x] Highlights are prepared as a separate editable file.
 - [x] Public code, canonical result CSVs, plotting, and reproducibility guide
-  are pinned by `pca-fgc-paper-v1.3.1`.
+  are pinned by `pca-fgc-paper-v1.3.2`.
 - [x] Restricted CMS data are accurately described rather than uploaded.
 - [x] Related FastGraph preprint is cited and distinguished.
 

@@ -4,7 +4,7 @@ Target: *Computer Physics Communications*
 
 Article type: Computational Physics Paper (CP)
 
-Manuscript release: `pca-fgc-paper-v1.3.1`
+Manuscript release: `pca-fgc-paper-v1.3.2`
 
 This folder collects the portal-ready material for the FastGraph submission.
 It deliberately separates mechanical, verified material from declarations

@@ -46,7 +46,7 @@ distance-based convention.
 The FastGraph library, including the PCA-subspace extension described in this
 paper, is publicly available at
 https://github.com/AgarwalAarush/FastGraphCompute. The immutable
-`pca-fgc-paper-v1.3.1` tags pin the exact library, benchmark harness,
+`pca-fgc-paper-v1.3.2` tags pin the exact library, benchmark harness,
 plotting, manuscript, and CLOVER comparison-fork revisions used for this
 submission. The public benchmark repository contains checked result CSVs,
 figure-generation code, configurations, and seeded synthetic reproduction.
