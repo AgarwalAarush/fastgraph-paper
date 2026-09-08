@@ -685,3 +685,27 @@ fonts and PDF syntax, and created the matching CPC source archive
 `FastGraph-CPC-CP-v1.3.2-source.zip` with a verified SHA-256 manifest. The
 v1.3.2 tag set preserves the same code, benchmark, plotting, and CLOVER
 revisions as v1.3.1, with this manuscript-only disclosure update.
+
+
+## 2026-09-08 — FastGraph identity and recall-audit corrections
+
+- Reframed the manuscript as the original FastGraph paper: removed all
+  prior-version/original-method language and deleted the unpublished
+  FastGraph self-citation. Axis-aligned binning is now consistently an
+  internal control or ablation.
+- Kept CAGRA--NN-Descent as the completed full-sweep headline timing
+  baseline because default IVF-PQ fails in the 5M-point campaign at d>=5.
+  Relabeled the archived recall rows as default-build CAGRA.
+- Repaired recall reporting without a new benchmark: fixed the plotted
+  settings to itopk_size=512 and tau_query=0.8, retained repetitions for
+  averaging, removed the incomparable search-only recall--speed Pareto
+  panel, and report only the common representative cell rather than means
+  over unequal dimension grids.
+- Qualified GPU residency and gradient determinism, added exactness
+  preconditions, replaced heap terminology with top-K buffer, narrowed the
+  detector-derived workload claims, reconciled release-surface wording,
+  corrected CLOVER wording and MiB/GiB units, and fixed the limitations claim
+  about approximate methods always being faster.
+- Regenerated the recall and memory figures and rebuilt Paper.pdf. The final
+  build is 16 pages with resolved citations and includes the generative-AI
+  declaration.
