@@ -709,3 +709,16 @@ revisions as v1.3.1, with this manuscript-only disclosure update.
 - Regenerated the recall and memory figures and rebuilt Paper.pdf. The final
   build is 16 pages with resolved citations and includes the generative-AI
   declaration.
+
+
+## 2026-09-08 — CPC v1.3.3 immutable release
+
+Created the `pca-fgc-paper-v1.3.3` release after the FastGraph-identity and
+recall-reporting corrections. The paper and benchmark repositories include
+the corrected manuscript and recall figure; the pinned FastGraphCompute,
+legacy plotting, and CLOVER revisions are unchanged from v1.3.2. The CPC
+portal metadata, cover letter, checklist, and entry guide now match the
+manuscript and no longer contain the obsolete prior-paper framing. The rebuilt
+16-page PDF and its eight referenced vector figures are packaged in
+`FastGraph-CPC-CP-v1.3.3-source.zip`; `unzip -t` passed and the archive SHA-256
+is `c6020e99b13101a16268b0cb24a2ef821cec26c36a0a152d3a0a25a840ee9b78`.

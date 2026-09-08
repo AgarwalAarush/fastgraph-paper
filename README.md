@@ -6,7 +6,7 @@ compiled PDF, and the single authoritative guide to reproducing every figure.
 
 ## Release Entry Point
 
-Use the immutable `pca-fgc-paper-v1.3.2` tag across the repositories below.
+Use the immutable `pca-fgc-paper-v1.3.3` tag across the repositories below.
 The earlier `v1.0.1` release remains intact as the original submission audit
 record.
 
