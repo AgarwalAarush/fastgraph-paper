@@ -722,3 +722,16 @@ manuscript and no longer contain the obsolete prior-paper framing. The rebuilt
 16-page PDF and its eight referenced vector figures are packaged in
 `FastGraph-CPC-CP-v1.3.3-source.zip`; `unzip -t` passed and the archive SHA-256
 is `c6020e99b13101a16268b0cb24a2ef821cec26c36a0a152d3a0a25a840ee9b78`.
+
+
+## 2026-09-08 — CPC v1.3.4 author and typography correction
+
+Prepared the `pca-fgc-paper-v1.3.4` release after inspecting the Editorial
+Manager proof. Aarush Agarwal is now the sole corresponding author, and the
+author order is Aarush Agarwal, Jan Kieseler, Raymond He, Matteo Cremonesi,
+and Shah Rukh Qasim in both the manuscript and portal materials. Removed the
+terminal periods from all 20 `\paragraph*` headings so the Elsevier class no
+longer renders doubled punctuation. The rebuilt 16-page PDF passed text, font,
+reference, and full-document visual checks. The verified CPC source archive is
+`FastGraph-CPC-CP-v1.3.4-source.zip`, with SHA-256
+`b560885dfce29e74bd0968501b648e5efc718b8c8b7ad79b924f44d886b61ec2`.

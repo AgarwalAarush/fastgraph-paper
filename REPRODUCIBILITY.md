@@ -2,7 +2,7 @@
 
 ## Release Identity
 
-Check out `pca-fgc-paper-v1.3.3` in every repository. These tags identify the
+Check out `pca-fgc-paper-v1.3.4` in every repository. These tags identify the
 exact library, benchmark, plotting, manuscript, and CLOVER-fork revisions for
 the clean public release.
 
