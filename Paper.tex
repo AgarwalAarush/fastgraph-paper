@@ -717,9 +717,8 @@ of FastGraph at the headline operating point. FastGraph is the fastest
 among the tested dimension-general \emph{exact} GPU $k$NN baselines at every dimension we measure
 and has a \geoCagra\ geomean advantage over the approximate
 CAGRA-NN-Descent build. The GGNN approximate baseline does win on raw
-wall-clock at low $d$, but its lower recall in the separate diagnostic
-of Section~\ref{sec:recall} means the timing should be read with that context
-in mind. That diagnostic is not a matched-recall timing comparison. The relative advantage is widest in the
+wall-clock at low $d$. Section~\ref{sec:recall} reports recall separately
+for the available diagnostic configurations. The relative advantage is widest in the
 $d{=}7$--$10$ regime where dense exact baselines pay the full
 quadratic cost and the approximate baselines have to retain enough
 graph quality to remain useful. Geomean across $d{=}2$--$10$ at this
@@ -861,14 +860,11 @@ workspace comparison.
 The plot reports each backend at the configuration used elsewhere in
 this paper. FAISS-GPU \texttt{IndexFlatL2} is exact; cuVS BF is
 exact. CAGRA-nn-descent and GGNN are approximate at their default
-quality settings; their memory advantage is partly inherited from
-running at lower effective recall (see
-Section~\ref{sec:recall}). A matched-recall memory comparison would
-require either raising their quality parameters until recall hits a
-target or downsampling their internal graphs, neither of which has a
-canonical setting; we therefore report the memory each backend uses
-\emph{as benchmarked}, with the understanding that the approximate
-backends are not bound to FastGraph's exact-recall constraint.
+quality settings (see Section~\ref{sec:recall}). We therefore report
+the memory each backend uses \emph{as benchmarked}; because the
+backends differ in recall and in their output and index
+representations, this is not an output- or quality-normalized
+workspace comparison.
 
 \paragraph*{Measurement methodology.}
 Memory is reported from synchronized before/after NVML samples. A
@@ -977,9 +973,8 @@ axis-aligned \texttt{binned\_select\_knn} control rather than the PCA wrapper.
 Its CAGRA rows use the default graph build and \texttt{itopk\_size}=512;
 its GGNN rows use $\tau_{\text{query}}=0.8$. This archived experiment is
 separate from the headline timing campaign, which uses CAGRA--NN-Descent.
-The archived external-backend times cover search or query after index
-construction, whereas the headline timings include construction and search;
-we therefore draw no speedup or recall--speed Pareto claim from this diagnostic.
+We use these archived outputs only to report recall; none of their timing
+values enters the performance comparisons.
 
 Because many recHits are spatially coincident, neighbor indices are not unique.
 We use \emph{distance-based recall}, counting a predicted neighbor as correct
@@ -1018,12 +1013,8 @@ GGNN (approximate) & $0.410$ \\
 \end{tabular}
 \end{table}
 
-These values establish the quality gap in the recorded configurations; they do
-not establish a matched-recall throughput comparison. A matched-recall study
-would need to use the same build and search configuration and the same
-end-to-end timing boundary for every backend. None of the recorded approximate
-settings reaches the exact operating point, so extrapolating an exact-recall
-speedup would not be justified.
+These values establish the quality gap in the recorded configurations. None
+of the recorded approximate settings reaches the exact operating point.
 
 The PCA path is validated separately with the released
 \texttt{binned\_select\_knn\_pca} entry point. Dedicated GPU tests compare
@@ -1042,8 +1033,7 @@ the stated FP32 tolerances.
   $d{=}3$, $N{=}5\times10^5$, $K{=}40$. FastGraph and FAISS-GPU satisfy their
   exact distance conventions; the approximate results use default-build CAGRA
   with \texttt{itopk\_size}=512 and GGNN with
-  $\tau_{\text{query}}=0.8$. This figure reports recall only, not comparable
-  end-to-end timing.}
+  $\tau_{\text{query}}=0.8$. This figure reports recall only.}
   \label{fig:recall_eval}
 \end{figure}
 
