@@ -3,8 +3,9 @@
 ## Release Identity
 
 Check out `pca-fgc-paper-v1.3.4` in every repository. These tags identify the
-exact library, benchmark, plotting, manuscript, and CLOVER-fork revisions for
-the clean public release.
+exact library, benchmark, plotting, and CLOVER-fork revisions used for the
+reported experiments. The current Array manuscript incorporates editorial
+corrections dated September 29, 2026; the tag retains the earlier manuscript.
 
 ## Recreate The Figures From Public Artifacts
 

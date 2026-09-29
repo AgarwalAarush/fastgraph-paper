@@ -1,12 +1,12 @@
 # FastGraph: PCA-Subspace Exact GPU kNN
 
 This is the manuscript repository for the FastGraph paper, prepared for
-submission to *Computer Physics Communications*. It contains the source,
+submission to *Array*. It contains the source,
 compiled PDF, and the single authoritative guide to reproducing every figure.
 
 ## Release Entry Point
 
-Use the immutable `pca-fgc-paper-v1.3.4` tag across the repositories below.
+Use the immutable `pca-fgc-paper-v1.3.4` tag for the experimental artifacts. The current manuscript includes the September 29, 2026 Array editorial corrections; that older tag preserves the preceding manuscript.
 The earlier `v1.0.1` release remains intact as the original submission audit
 record.
 

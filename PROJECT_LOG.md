@@ -735,3 +735,26 @@ longer renders doubled punctuation. The rebuilt 16-page PDF passed text, font,
 reference, and full-document visual checks. The verified CPC source archive is
 `FastGraph-CPC-CP-v1.3.4-source.zip`, with SHA-256
 `b560885dfce29e74bd0968501b648e5efc718b8c8b7ad79b924f44d886b61ec2`.
+
+
+## 2026-09-29 — Array manuscript corrections
+
+Prepared a clean manuscript PDF for Array at the author's request, without
+Editorial Manager wrapper pages or a journal/date footer. Corrected the
+Figure 1 trend explanation, replaced the unsupported expected-search bound
+with candidate/enumeration-dependent work, and separated exact-arithmetic
+reasoning from finite FP32 validation. Added the archived recall threshold
+(relative 1e-4 plus absolute 1e-10) and the pinned PCA test tolerances
+(atol 1e-6; rtol 1e-5 for returned distances and 1e-3 for distance multisets).
+Removed extrapolation of archived recall to unmatched headline timings,
+clarified the unknown HGCAL feature semantics and notation, and corrected
+the ablation speedup heading. Measurements, figures, authors, and abstract
+are unchanged. The v1.3.4 experimental artifact tags remain unchanged;
+current manuscript availability wording now distinguishes those artifacts
+from this editorial revision. Unknown feature definitions and unmeasured
+headline recall remain disclosed limitations, not newly supplied evidence.
+
+The 17-page manuscript compiles with resolved references, no overfull boxes,
+and embedded fonts. All pages were checked as rendered images, with the
+changed title, complexity, and recall pages inspected at reading size.
+Submission deliverables are under submission/array/.
