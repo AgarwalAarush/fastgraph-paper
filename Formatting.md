@@ -13,6 +13,11 @@ The long occupancy-proxy expression is displayed separately so it fits
 the narrower line width. Recheck equations, tables, and floats after any
 future changes to the page geometry or font size.
 
+Algorithm 1 uses `\small` and `[!htbp]` to fit below its explanation.
+The short code listing floats as a single block. Two targeted
+`\FloatBarrier` commands keep the usage example before Experimental Setup
+and the recall figure before the following integration discussion.
+
 ## Float Placement
 
 Large blank areas usually come from over-constraining figures and tables. In

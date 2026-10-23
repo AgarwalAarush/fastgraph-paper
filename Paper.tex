@@ -16,6 +16,7 @@
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{float}
+\usepackage{placeins}
 % \usepackage{hyperref}
 
 \graphicspath{{media/}{images/}}     % organize your images and other figures under media/ folder
@@ -524,7 +525,8 @@ the implementation and the proof aligned: projected-space search only
 decides which bins to visit, while exactness is enforced by the
 original-space distance computation.
 
-\begin{algorithm}[!t]
+\begin{algorithm}[!htbp]
+\small
 \DontPrintSemicolon
 \KwIn{\texttt{coords}[$n_v$][$n_c$] (original-space $X$), $V_k$, \texttt{binIdx}[$n_v$] (projected-space bins), \texttt{binOffsets}[$n_v$][$n_b{+}1$], \texttt{binBounds}[$n_B$], \texttt{binCounts}[$n_b$], scalar \texttt{binWidth}, $n_v,K,n_c,n_b,n_B$}
 \KwOut{\texttt{neighbors}[$n_v$][$K$] indices including slot 0 self by convention, $r_K^2$ values}
@@ -620,7 +622,7 @@ The PCA entry point is an eager-mode Python wrapper around the scripted
 axis-aligned primitive and the custom CUDA operation. A minimal usage
 example is:
 
-\begin{lstlisting}[language=Python, caption={Minimal eager-mode PCA-FastGraph usage.}]
+\begin{lstlisting}[language=Python, float=htbp, caption={Minimal eager-mode PCA-FastGraph usage.}]
 from fastgraphcompute import binned_select_knn_pca
 from fastgraphcompute.gnn_ops import GravNetOp
 
@@ -639,6 +641,7 @@ layer = GravNetOp(in_channels=16, out_channels=32,
 out, idx, dist2, space = layer(features, rs)
 \end{lstlisting}
 
+\FloatBarrier
 \section{Experimental Setup}
 \label{sec:expsetup}
 
@@ -777,7 +780,7 @@ $k{=}40$ for $d{=}3$ and $d{=}8$ on the common five-point
 \texttt{mps:100} grid. Separation is strongest in the PCA-favorable
 regime.
 
-\begin{figure}[!t]
+\begin{figure}[!htbp]
 \centering
   \begin{minipage}{0.49\textwidth}
   \centering
@@ -1076,6 +1079,8 @@ These finite tests validate the exercised configurations, not all FP32 inputs.
   \label{fig:recall_eval}
 \end{figure}
 
+% Keep the recall figure with its evaluation before the integration discussion.
+\FloatBarrier
 \subsection{Dynamic graph construction in GNNs}
 
 GravNet-style layers~\cite{Qasim2019GravNet} construct a fresh kNN

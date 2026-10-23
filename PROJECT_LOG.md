@@ -776,3 +776,24 @@ are no overfull boxes; two bibliography underfull lines remain. Inspected
 the title page and the full-document page renders. The matching minimal
 arXiv source archive lives under submission/arxiv/; historical Array
 deliverables and experimental release tags are preserved.
+
+
+## 2026-10-22 — Float placement and content-preservation audit
+
+Compared the preprint source against the preceding Array manuscript: figure
+assets, bibliography, numeric values, captions, and scientific claims are
+unchanged. The only body wording adjustment in the typography change is the
+local sentence around the occupancy proxy, whose unchanged formula moved
+from inline to display math.
+
+Reviewed each figure, table, algorithm, and listing against the PDF page
+containing its discussion. Reduced the algorithm body to `\small` and
+allowed here-placement so it appears directly under its explanation on page
+6. Kept the usage listing on one page before Experimental Setup, allowed the
+dataset-size figure to follow its subsection heading, and added a targeted
+barrier to keep the recall figure before the integration subsection. These
+follow-up edits change presentation only. The manuscript remains 20 pages;
+all figures and tables lie on the same page as their discussion or the next.
+The page map is recorded in submission/arxiv/README.md. Rebuilt and visually
+checked the updated document with no unresolved references or overfull boxes,
+and regenerated the matching arXiv source ZIP.
