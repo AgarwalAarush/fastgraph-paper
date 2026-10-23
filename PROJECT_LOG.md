@@ -797,3 +797,12 @@ all figures and tables lie on the same page as their discussion or the next.
 The page map is recorded in submission/arxiv/README.md. Rebuilt and visually
 checked the updated document with no unresolved references or overfull boxes,
 and regenerated the matching arXiv source ZIP.
+
+
+## 2026-10-22 — Lowercase emails and versioned arXiv preprint
+
+Removed small caps from the author-email display so all five addresses render
+in their original lowercase form. Rebuilt the PDF and matching arXiv source
+ZIP. The manuscript remains 20 pages; body text and float locations are
+unchanged. The `arxiv-preprint-v1.0.0` tag preserves this preprint separately
+from the existing experimental artifact tags.

@@ -32,6 +32,9 @@ referenced by the manuscript.
 
 ## arXiv Upload
 
+The `arxiv-preprint-v1.0.0` tag preserves the preprint with the updated
+typography, checked float placement, and lowercase author emails.
+
 Use [submission/arxiv/FastGraph-arXiv-source.zip](submission/arxiv/FastGraph-arXiv-source.zip)
 with `Paper.tex` as the main file and pdfLaTeX / TeX Live 2023. The bundle
 contains the current manuscript, its compiled BibTeX bibliography, the `.bib`
