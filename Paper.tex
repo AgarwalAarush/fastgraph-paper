@@ -1,10 +1,9 @@
-\documentclass[final,3p,times]{elsarticle}
-
-%% For two-column layout, use:
-% \documentclass[final,3p,times,twocolumn]{elsarticle}
+\documentclass[final,3p,11pt]{elsarticle}
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+% Classic Computer Modern fonts and a shorter line length for the preprint.
+\geometry{textwidth=432pt,textheight=650pt,centering}
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsmath}        % math
@@ -61,6 +60,26 @@
 % Plain first-page footer: no journal name or submission date.
 \makeatletter
 \let\ps@pprintTitle\ps@plain
+% Register authors with elsarticle while displaying one entry per author.
+\newcommand{\preprintauthors}{}
+\newcommand{\preprintauthor}[5][]{%
+  \author[#1]{#2}\ead{#3}%
+  \g@addto@macro\preprintauthors{%
+    \noindent\textbf{\let\@corref\@empty #2\@corref}%
+    \hfill{\small\textsc{#3}}\par
+    {\itshape #4\par #5\par}\medskip}}
+\renewcommand{\MaketitleBox}{%
+  \par\begingroup
+  \centering {\Large\bfseries\@title\par}\vspace{18pt}
+  \begin{minipage}{\textwidth}
+    \raggedright\normalsize\preprintauthors
+  \end{minipage}\par\vspace{12pt}
+  \ifvoid\absbox\else\unvbox\absbox\par\vspace{10pt}\fi
+  \ifvoid\keybox\else\unvbox\keybox\par\vspace{10pt}\fi
+  \endgroup}
+% Emails are printed beside author names rather than repeated in a footnote.
+\let\@elseads\@empty
+\let\emailauthor\@gobbletwo
 \makeatother
 \renewcommand{\bibfont}{\normalfont\normalsize}
 
@@ -138,20 +157,20 @@
 \title{FastGraph: PCA-Subspace Binned $k$-Nearest-Neighbor Graph Construction for GPU Geometric Deep Learning}
 
 %% Authors
-\author[cmu]{Aarush Agarwal\corref{cor1}}
-\ead{aarusha@andrew.cmu.edu}
+\preprintauthor[cmu]{Aarush Agarwal\corref{cor1}}{aarusha@andrew.cmu.edu}
+  {Carnegie Mellon University}{Pittsburgh, PA, USA}
 
-\author[kit]{Jan Kieseler}
-\ead{jan.kieseler@cern.ch}
+\preprintauthor[kit]{Jan Kieseler}{jan.kieseler@cern.ch}
+  {Karlsruhe Institute of Technology}{Karlsruhe, Germany}
 
-\author[cmu]{Raymond He}
-\ead{rhe2@andrew.cmu.edu}
+\preprintauthor[cmu]{Raymond He}{rhe2@andrew.cmu.edu}
+  {Carnegie Mellon University}{Pittsburgh, PA, USA}
 
-\author[cmu]{Matteo Cremonesi}
-\ead{mcremone@andrew.cmu.edu}
+\preprintauthor[cmu]{Matteo Cremonesi}{mcremone@andrew.cmu.edu}
+  {Carnegie Mellon University}{Pittsburgh, PA, USA}
 
-\author[uzh]{Shah Rukh Qasim}
-\ead{shah.rukh.qasim@cern.ch}
+\preprintauthor[uzh]{Shah Rukh Qasim}{shah.rukh.qasim@cern.ch}
+  {University of Zurich}{Zürich, Switzerland}
 
 \cortext[cor1]{Corresponding author}
 
@@ -418,9 +437,12 @@ to balance bin density against neighborhood reach,
   n_{\text{bins}} = \left(\frac{32\,n_{\text{elems}}}{K}\right)^{\frac{1}{k}},
 \]
 where the released implementation uses the historical occupancy proxy
-$n_{\text{elems}}=\lfloor\max(\texttt{row\_splits})/
-|\texttt{row\_splits}|\rfloor+1$, $K$ is the requested neighborhood
-size, and the integer result is clamped to $[5,30]$. For the one-segment
+\[
+  n_{\text{elems}}=\lfloor\max(\texttt{row\_splits})/
+  |\texttt{row\_splits}|\rfloor+1,
+\]
+and $K$ is the requested neighborhood size. The integer division count
+is clamped to $[5,30]$. For the one-segment
 benchmark input \texttt{row\_splits}=$[0,N]$, this proxy is approximately
 $N/2$; it is a performance heuristic and does not enter the exactness
 condition. Points are sorted by bin index, and cumulative offsets are

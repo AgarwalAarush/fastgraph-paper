@@ -1,7 +1,7 @@
 # FastGraph: PCA-Subspace Exact GPU kNN
 
-This is the manuscript repository for the FastGraph paper, prepared for
-submission to *Array*. It contains the source,
+This is the manuscript repository for the FastGraph paper, with an arXiv
+preprint layout and an archived *Array* submission. It contains the source,
 compiled PDF, and the single authoritative guide to reproducing every figure.
 
 ## Release Entry Point
@@ -29,3 +29,11 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error Paper.tex
 
 `Paper.pdf` is the compiled release artifact. `media/` contains the figures
 referenced by the manuscript.
+
+## arXiv Upload
+
+Use [submission/arxiv/FastGraph-arXiv-source.zip](submission/arxiv/FastGraph-arXiv-source.zip)
+with `Paper.tex` as the main file and pdfLaTeX / TeX Live 2023. The bundle
+contains the current manuscript, its compiled BibTeX bibliography, the `.bib`
+source, and only the eight referenced PDF figures. Review arXiv's generated
+PDF before completing submission. See [the bundle notes](submission/arxiv/README.md).

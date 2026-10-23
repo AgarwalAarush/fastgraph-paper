@@ -1,5 +1,18 @@
 # LaTeX Formatting Notes
 
+## Preprint Typography
+
+The current arXiv layout uses `elsarticle` without the `times` option,
+11-point Computer Modern text, and a centered 432 pt by 650 pt text block.
+The title block lists each author individually with affiliation and location
+below the name and email aligned right. `\preprintauthor` registers the
+standard Elsevier author/email data and the visible preprint entry together;
+keep the author order and corresponding-author marker consistent.
+
+The long occupancy-proxy expression is displayed separately so it fits
+the narrower line width. Recheck equations, tables, and floats after any
+future changes to the page geometry or font size.
+
 ## Float Placement
 
 Large blank areas usually come from over-constraining figures and tables. In

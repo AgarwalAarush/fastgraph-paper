@@ -758,3 +758,21 @@ The 17-page manuscript compiles with resolved references, no overfull boxes,
 and embedded fonts. All pages were checked as rendered images, with the
 changed title, complexity, and recall pages inspected at reading size.
 Submission deliverables are under submission/array/.
+
+
+## 2026-10-22 — arXiv preprint typography and author layout
+
+At the author's request, replaced the Times journal typography with
+11-point Computer Modern, narrowed the text block to 432 pt, and set its
+height to 650 pt. The title now uses individual author entries with
+affiliations beneath the names and emails aligned right. The current author
+order and Aarush Agarwal's corresponding-author designation are preserved.
+The long occupancy-proxy expression was moved to display math to prevent
+overflow; measurements, scientific claims, and figure assets are unchanged.
+
+Rebuilt the manuscript to 20 pages with pdfLaTeX and BibTeX, with shell escape
+disabled. Citations and references resolve, fonts are embedded, and there
+are no overfull boxes; two bibliography underfull lines remain. Inspected
+the title page and the full-document page renders. The matching minimal
+arXiv source archive lives under submission/arxiv/; historical Array
+deliverables and experimental release tags are preserved.
