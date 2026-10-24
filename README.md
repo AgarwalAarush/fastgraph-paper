@@ -1,12 +1,23 @@
 # FastGraph: PCA-Subspace Exact GPU kNN
 
-This is the manuscript repository for the FastGraph paper, with an arXiv
-preprint layout and an archived *Array* submission. It contains the source,
-compiled PDF, and the single authoritative guide to reproducing every figure.
+This is the manuscript repository for the FastGraph paper. The current
+source and PDF contain the October 24, 2026 physics-facing CPC rewrite,
+retaining the preprint typography and the validated experimental record.
+Historical *Array* and arXiv submission bundles remain archived separately.
+
+## Current CPC Manuscript
+
+Read [the revision package](submission/cpc-resubmission-2026-10-24/README.md)
+for the manuscript, source bundle, editor-response draft, change log, and
+author-confirmation flags. This is a proposed new CPC submission following
+the September 20 desk decision. No journal submission has been made by this
+editing pass; the separate Array consideration must be resolved by the authors.
 
 ## Release Entry Point
 
-Use the immutable `pca-fgc-paper-v1.3.4` tag for the experimental artifacts. The current manuscript includes the September 29, 2026 Array editorial corrections; that older tag preserves the preceding manuscript.
+Use the immutable `pca-fgc-paper-v1.3.4` tag for the experimental artifacts.
+The current manuscript includes the September 29 corrections and the October
+24 CPC rewrite; the older tag preserves the preceding manuscript.
 The earlier `v1.0.1` release remains intact as the original submission audit
 record.
 
@@ -30,13 +41,13 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error Paper.tex
 `Paper.pdf` is the compiled release artifact. `media/` contains the figures
 referenced by the manuscript.
 
-## arXiv Upload
+## Archived arXiv Upload
 
 The `arxiv-preprint-v1.0.0` tag preserves the preprint with the updated
 typography, checked float placement, and lowercase author emails.
 
 Use [submission/arxiv/FastGraph-arXiv-source.zip](submission/arxiv/FastGraph-arXiv-source.zip)
 with `Paper.tex` as the main file and pdfLaTeX / TeX Live 2023. The bundle
-contains the current manuscript, its compiled BibTeX bibliography, the `.bib`
+contains the October 22 preprint, its compiled BibTeX bibliography, the `.bib`
 source, and only the eight referenced PDF figures. Review arXiv's generated
 PDF before completing submission. See [the bundle notes](submission/arxiv/README.md).

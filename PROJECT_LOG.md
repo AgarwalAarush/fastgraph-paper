@@ -806,3 +806,36 @@ in their original lowercase form. Rebuilt the PDF and matching arXiv source
 ZIP. The manuscript remains 20 pages; body text and float locations are
 unchanged. The `arxiv-preprint-v1.0.0` tag preserves this preprint separately
 from the existing experimental artifact tags.
+
+
+## 2026-10-24 — Physics-facing CPC narrative revision
+
+Revised the active manuscript against Andrew Hazel's September 20 decision
+on COMPHY-D-26-01041, read directly from the decision email. Distinguished
+that desk rejection and welcome for a new paper from the separate October
+Array reviews in the user's pasted conversation. Retitled the manuscript
+around calorimeter reconstruction and rewrote the abstract and introduction
+from overlapping showers, pileup, and hit aggregation to the repeated
+neighbor-search task. Added a primary detector-context citation. Replaced
+all 20 paragraph headings and four italic complexity labels with connected
+prose, and added an explicit reconstruction-chain discussion.
+
+Narrowed unsupported downstream, numerical, optimality, and generality
+claims. The exact-arithmetic proof and finite FP32 tests remain distinct;
+the detector-derived single-segment timings are not represented as
+event-batched learned-coordinate or reconstruction measurements. No new GPU
+work was launched. Source comparisons verified unchanged author block/order,
+numeric macros, figures/captions, tables, algorithm, usage listing, proof,
+recall-validation account, and availability statement. Historical submission
+archives and experimental release tags remain unchanged.
+
+The revised 21-page PDF builds with embedded fonts, resolved references,
+and no overfull boxes; three bibliography underfull diagnostics remain.
+Inspected the all-page contact sheet and key pages at reading size. Prepared
+a matching PDF and 11-file source ZIP; archive integrity, fresh extracted
+build, PDF identity, and SHA-256 checks passed. The package under
+`submission/cpc-resubmission-2026-10-24/` includes the change log,
+author-confirmation/evidence flags, editor response, cover-letter draft,
+metadata, and validation record. CPC scope acceptance is not guaranteed by
+the rewrite; physics deployment evidence remains unmeasured, and authors
+must resolve the separate Array consideration before any new submission.

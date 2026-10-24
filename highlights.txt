@@ -1,4 +1,5 @@
-- PCA replaces fixed-coordinate binning for exact GPU kNN in dimensions 4-10.
-- A contractive projection prunes bins while distances remain full-dimensional.
-- FastGraph builds a 5M-point, d=8, k=40 graph in 7.5 s on one A100.
-- The PyTorch API exposes opt-in PCA neighbor construction in GravNetOp.
+- Calorimeter reconstruction motivates repeated neighbor search in learned spaces.
+- PCA-subspace bins prune candidates while preserving full-coordinate distances.
+- A 5M-point HGCAL feature stress test takes 7.5 s at d=8, k=40 on one A100.
+- Exact-arithmetic search bounds and finite FP32 tests are reported separately.
+- Event-local model throughput and reconstruction gains remain to be evaluated.

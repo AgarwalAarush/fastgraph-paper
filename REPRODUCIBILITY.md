@@ -4,8 +4,10 @@
 
 Check out `pca-fgc-paper-v1.3.4` in every repository. These tags identify the
 exact library, benchmark, plotting, and CLOVER-fork revisions used for the
-reported experiments. The current Array manuscript incorporates editorial
-corrections dated September 29, 2026; the tag retains the earlier manuscript.
+reported experiments. The current manuscript incorporates the September 29
+editorial corrections and the October 24 CPC narrative revision; the tag
+retains the earlier manuscript. Neither text revision changes the validated
+experimental artifacts or creates a new experimental release identity.
 
 ## Recreate The Figures From Public Artifacts
 
