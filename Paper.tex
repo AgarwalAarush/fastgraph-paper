@@ -206,7 +206,10 @@ On a 5\,M-point, single-segment HGCAL detector-feature stress test at
 $d{=}8$, $k{=}40$, FastGraph constructs the graph in \fgcPCADeight,
 with speedups of up to $41\times$ over FAISS-GPU and $19\times$ over cuVS
 brute force. The measured speedup over approximate CAGRA is $17\times$,
-without a matched-recall comparison. These results establish a kernel-level
+without a matched-recall comparison. Separate covariance controls reproduce
+the concentrated-input advantage across three data seeds; isotropic and
+standardized-feature controls expose regimes where brute force is faster.
+These results establish a kernel-level
 advantage on the tested detector-feature distributions; event-batched
 learned-coordinate workloads, reconstruction performance, and end-to-end
 model throughput remain to be evaluated.
@@ -729,6 +732,19 @@ are not part of the recommended headline configuration; $k=7$ exceeds the
 current per-block register budget for some configurations. The empirical
 optimum on HGCAL data is well inside the evaluated range.
 
+A supplementary A100 study uses the same pinned FastGraph library and
+preloaded-input protocol to test covariance, feature scaling, numerical
+behavior, and synthetic segmentation. Its measurements are separate from
+the historical headline campaign. Each production timing bundle has one
+warmup followed by three measured build-plus-query repetitions in the same
+worker process. The main synthetic $K{=}40$ comparisons use three independent
+data seeds; selected $K{=}10,100$ comparisons use two. The additional
+ablation, equal-trace, segmentation, and detector-prefix controls have one
+independent input unless stated otherwise. Repeated timing measurements
+are not independent datasets. The numerical reference is direct FP64
+coordinate subtraction; large-input checks search all eligible candidates
+for the recorded query sample.
+
 \section{Performance Comparisons}
 
 We first compare construction times on the detector-feature stress test,
@@ -875,7 +891,7 @@ full dimensional sweep and two dataset-size scans at $d{=}3$ and $d{=}8$.
 \caption{FastGraph speedup over GPU baselines on synthetic Gaussian
 $\mathcal{N}(0, I_d)$ data at $N{=}10^6$, $k{=}40$ (median of
 3 reps on the fixed-seed synthetic Gaussian benchmark set used
-throughout this paper). The HGCAL detector-data wins at $d \geq 6$
+for this figure). The HGCAL detector-data wins at $d \geq 6$
 (Figure~\ref{fig:headline_dim}) are not reproduced on isotropic
 data, showing that the detector-data result does not follow from
 dimensionality and cell-list binning alone.}
@@ -896,6 +912,61 @@ wins at $d{=}6$--$10$ (Section~\ref{sec:headline}) are consistent with
 PCA exploiting structure absent from isotropic synthetic data, but the
 current feature-prefix experiment does not isolate dimensionality,
 feature identity, units, and anisotropy from one another.
+
+The supplementary covariance controls vary the fraction of variance in
+the leading three components while retaining full-coordinate Euclidean
+distance evaluation. At $N{=}10^6$, $K{=}40$, and three binning dimensions,
+the $d{=}8$ case with 99\% top-three variance takes about 0.300\,s and is
+21.74--22.81$\times$ faster than cuVS across three independent seeds.
+Reducing the concentration to 90\% increases the time to 1.383\,s and
+reduces the observed advantage to 4.76--4.91$\times$.
+Isotropic $d{=}10$ inputs instead take 12.389\,s, about
+1.86$\times$ slower than cuVS. Equal-trace isotropic controls retain
+this unfavorable behavior: covariance concentration, rather than overall
+variance magnitude alone, is material to the observed advantage.
+
+\begin{table}[!htbp]
+\centering
+\caption{Supplementary covariance controls at $N{=}10^6$, $K{=}40$.
+Times summarize the median repeated time across three data seeds. Speedup
+is the geometric mean of the paired cuVS/FastGraph median-time ratios.
+Exploratory pointwise 95\% intervals apply a Student-$t$ interval to the
+three log ratios; they assume independent, approximately normal seed log
+ratios. With three seeds that assumption is weakly tested. These intervals
+do not cover systematic errors or generalization to other workloads.}
+\label{tab:covariance-controls}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Input & $d$ & Time (s) & Speedup & 95\% interval \\
+\midrule
+99\% top-three variance & 8 & 0.300 & 22.21 & 20.89--23.61 \\
+90\% top-three variance & 8 & 1.383 & 4.82 & 4.63--5.02 \\
+Isotropic Gaussian & 8 & 7.151 & 0.93 & 0.92--0.93 \\
+Isotropic Gaussian & 10 & 12.389 & 0.53 & 0.53--0.54 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The numerical detector-feature controls further expose the dependence on
+the specified metric. For the first million rows at $d{=}8$, the leading
+three components capture 99.64\% of the raw variance but 77.42\% after
+per-column standardization. FastGraph takes 0.451\,s on the raw input
+(14.23$\times$ faster than cuVS), versus 13.982\,s after standardization
+(about 1.96$\times$ slower). These are separate metrics, each with its own
+reference neighbors, not alternative implementations of the same graph.
+They use one detector prefix with three timing repetitions and do not
+provide an across-input confidence interval. Unknown physical feature
+semantics and their relation to learned coordinates remain unresolved.
+
+Diagnostic counters independently support the pruning explanation.
+On the concentrated $d{=}8$, million-point synthetic input, PCA evaluates
+2.35\% of eligible non-self pairs, versus 9.56\% for axis binning.
+For the raw detector prefix the corresponding PCA fraction is 3.75\%,
+rising to 89.05\% after standardization. Instrumented counter timings are
+excluded from the latency comparisons. Selected bin/PCA-sample ablations
+remain exploratory one-seed comparisons; their fastest measured settings
+are not an independently validated universal optimum.
 
 \subsection{Memory footprint}
 \label{sec:memory}
@@ -935,6 +1006,16 @@ Python-thread poller was also recorded, but several external backends hold
 the Python GIL and starve that poller during the call; those transient
 samples are therefore excluded rather than presented as comparable peak
 measurements.
+
+The supplementary study instead uses an independent NVML sampling process
+and records absolute peaks as well as the pre-call baseline and delta.
+On the $d{=}8$, $N{=}10^6$, $K{=}40$ concentrated synthetic case, sampled
+absolute peak memory is 2.379\,GiB for PCA-FastGraph, 2.338\,GiB for the
+axis control, 4.010\,GiB for FAISS, and 2.022\,GiB for cuVS BF. Their
+respective baselines are 1.332, 1.268, 1.268, and 1.270\,GiB. These are
+as-used device-wide sampled peaks, including allocator state; sampling
+can miss brief allocations. They supplement rather than replace the
+historical post-call measurement in Figure~\ref{fig:memory_footprint}.
 
 \subsection{Binning dimensionality ablation}
 \label{sec:mbd-ablation}
@@ -1098,6 +1179,28 @@ multisets versus brute force use \texttt{atol}=$10^{-6}$ and
 $|a-b|\le\texttt{atol}+\texttt{rtol}|b|$, with $b$ the reference value.
 These finite tests validate the exercised configurations, not all FP32 inputs.
 
+Supplementary tests extend the PCA path to duplicates, near ties, extreme
+scales, projection/bin boundaries, synthetic segments, and detector-feature
+prefixes. Detector prefixes through $N{=}32{,}768$ use a full FP64 reference;
+million-point cases use 512 sampled queries plus segment starts, each
+searched against all eligible candidates. Every recorded PCA/axis comparison passes its strict
+distance-multiset checks. Fixed-neighbor backward diagnostics have maximum
+gradient discrepancy $1.4\times10^{-9}$; these are bounded tests rather
+than trained-model accuracy or bitwise-determinism results.
+
+The same outputs/settings now have paired recall and build-plus-query
+measurements for CAGRA--NN-Descent and GGNN on these supplementary inputs.
+Their recorded distance recalls span approximately 0.999951--1 and
+0.589908--1, respectively. These settings do not retroactively determine
+the recall of the historical headline runs. FAISS and cuVS BF also show
+numerical differences from the direct FP64 reference on raw million-point
+detector prefixes: their lowest measured distance recalls are about
+0.990107 and 0.988353. The harness's success flag for external backends
+checks structural validity; it does not require full FP64-reference recall.
+FGC additionally receives strict distance-multiset and returned-distance
+checks. Algorithmic exactness, structural success, and numerical agreement
+with this reference are therefore reported separately.
+
 \begin{figure}[!htbp]
 \centering
   \includegraphics[width=0.68\textwidth]{recall_exactness_proof.pdf}
@@ -1218,9 +1321,12 @@ search in HGCAL reconstruction. Exact search avoids a recall-tuning
 parameter; it does not by itself guarantee a unique graph under ties,
 bitwise reproducible gradients, or controlled physics systematics.
 Moreover, the exact-arithmetic pruning argument does not bound FP32
-roundoff, and the PCA-path correctness tests stop at $N=8{,}000$.
-Large-scale detector-feature boundary cases and matched-recall timing
-curves remain unmeasured.
+roundoff. The supplementary FP64 checks and matched timing/recall curves
+strengthen the tested numerical record, but large inputs still use sampled
+queries and neither actual learned-coordinate nor confirmed event-batched
+performance is established. Three data seeds support the principal
+synthetic comparisons; one-input controls and ablations do not establish
+across-workload confidence or universal parameter choices.
 
 Backend compatibility is another restriction on the comparison. The
 default CAGRA IVF-PQ build path fails in the 5\,M-point timing campaign at $d \ge 5$
@@ -1240,7 +1346,7 @@ The FastGraph implementation described in this paper is available at
 the upstream \texttt{FastGraphCompute} library.
 The immutable \texttt{pca-fgc-paper-v1.3.4} release tags pin the exact
 FastGraph, benchmark-harness, plotting, and CLOVER-fork revisions used
-for the reported experiments; the release is built against the CUDA
+for the historical headline experiments; the release is built against the CUDA
 12.1 toolchain and reports FastGraphCompute package version \texttt{1.2.0}.
 The evaluated and recommended kernel surface covers binning subspace size
 $k \in \{2, 3, 4, 5\}$; the tag also contains experimental $k=6,7$
@@ -1255,6 +1361,15 @@ hardcoded synthetic-N template chain in \texttt{main()} disabled in favor
 of the mesh path, and the build retargeted to \texttt{sm\_80} for A100).
 The revised manuscript source is maintained at
 \url{https://github.com/AgarwalAarush/fastgraph-paper}.
+The supplementary November 2026 study retains that FastGraph library and
+uses the separately pinned \texttt{revision\_campaign} harness on branch
+\texttt{codex/reviewer-gpu-campaign} of the benchmark repository.
+Its source-plan identities, aggregate tables and uncertainty calculation
+are documented with this draft in
+\texttt{submission/reviewer-evidence-2026-11-11/}; they are not part of
+the earlier immutable experimental tags. The segmented FAISS repair
+shares one scratch allocator across sequential event indexes and has a
+separate plan and matched-case return; original failures remain archived.
 \endgroup
 
 The detector-derived stress tests use CMS HGCAL simulation data (recHit
@@ -1292,6 +1407,14 @@ cell. These gains depend on the input distribution: isotropic
 synthetic inputs become unfavorable as dimension grows, and CLOVER
 is about $100\times$ faster at the largest $d{=}3$ HGCAL comparison
 point, where FastGraph bypasses PCA.
+
+The supplementary controls isolate this distribution dependence more
+directly: the concentrated $d{=}8$ synthetic case retains an approximately
+22$\times$ cuVS advantage across three seeds, while standardizing the
+detector-feature prefix reverses its advantage. Matched timing/recall,
+FP64-reference checks, independent memory samples, and candidate counters
+strengthen the numerical and systems evidence without establishing
+performance on learned coordinates or confirmed physical events.
 
 The demonstrated advance is reduced search cost on the stated
 detector-feature workloads. Their unknown feature semantics and

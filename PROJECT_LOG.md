@@ -883,3 +883,55 @@ Research code/coverage audit: private Performance branch
 The manuscript, author order, validated historical CSVs and figures were not
 changed by this research work. Original numbered reviews/Reviewer 18 attachment
 are still needed before a complete point-by-point response.
+
+## 2026-11-11 — Completed repair, independent-seed uncertainty and evidence draft
+
+The reverse extension ended at 654/668 successful bundles, one failed and
+13 missing, all FAISS. The wrapper retained one default scratch resource
+per event index; at 64 segments this exhausted the A100 despite a small
+point count. Changed resource ownership to one allocator shared by serial
+event indexes. Frozen repair harness b72fa54 repeated all original backends
+on affected cases plus numerical gates under a new plan/run root. GPU64819
+completed all 152 bundles across 17 cases in 10m43s, with zero failed/missing
+records; CPU64820 exported/imported/plotted the separate return. Explicit
+task/input/device reconciliation verifies all 14 original gaps, while the
+original failed record and partial return remain unchanged. Total local
+full-A100 allocation time across campaigns/repair is 8h32m10s. No GPU jobs
+remain queued.
+
+All 1,395 timing configurations in the original two local returns contain
+three measured repetitions after warmup, within the same worker/input.
+Principal K40 synthetic cells have three independent data seeds. Added
+descriptive timing variability and exploratory Student-t intervals on
+paired seed log-speedups after collapsing repeated controls. At d8/99%
+variance, the geometric cuVS speedup is 22.21 with interval 20.89–23.61;
+at 90% it is 4.82 (4.63–5.02). Isotropic d10 remains slower (speedup
+0.53, interval 0.53–0.54). These intervals are conditional on a weakly
+assessed small-sample distribution model, not guarantees of generalization.
+One-input controls have no across-input CI.
+
+The active author-review manuscript now integrates the covariance/feature
+scaling controls, an explicit uncertainty table, independent-process NVML
+sampled peak memory, candidate counts, FP64-reference checks and matched
+timing/recall evidence. It discloses external-backend structural checks
+versus strict FGC distance checks, and FAISS/cuVS numerical differences on
+raw prefixes. Original headline numbers/figures, authors, tagged releases
+and old submission bundles remain unchanged. Availability now distinguishes
+the supplementary protocols from the old experimental tags.
+
+The revised PDF has 22 pages. All references resolve, fonts are embedded,
+and no overfull boxes occur; three existing bibliography underfull lines
+remain. Inspected the contact sheet, covariance/CI table and availability
+page. The 11-file source ZIP passes integrity checks and fresh extraction
+builds with matching PDF text. An independent validator recomputes all four
+new table rows and verifies timing-repetition counts. Review packet and safe
+aggregate source tables are in `submission/reviewer-evidence-2026-11-11/`.
+
+Canonical CPU regression suite: 76 passing tests before measurement, plus
+two newly added reconciliation checks passing afterward. Actual H100
+CUDA12.4/sm90 cold setup/build and its then-current 59 CPU tests passed;
+actual H100 runtime remains untested. Real event correspondence/feature
+definitions, learned-model checkpoints/adapters/batches/loss, complete-model
+throughput and original numbered reviews/Reviewer18 attachment still prevent
+full reviewer closure. No reconstruction accuracy or training-convergence
+result is asserted. This is a draft for author review, not a journal action.

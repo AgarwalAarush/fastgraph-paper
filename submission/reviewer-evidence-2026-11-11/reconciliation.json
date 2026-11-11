@@ -1,0 +1,135 @@
+{
+  "original_plan_hash": "a03b48a7ed7b528b857c471765f96551a1f8414ee3a97d7e57a8785772e09a57",
+  "policy": "coverage reconciliation only; original results unchanged; no cross-plan timing rows pooled",
+  "recovered_original_tasks": 14,
+  "repair_complete_bundles": 152,
+  "repair_plan_hash": "ee6135bac6fcb7b645f707a7e6a0068d215f76296d5e9daf5e8e9859e53b18f1",
+  "verified_tasks": [
+    {
+      "backend": "faiss",
+      "case_id": "7d35cba0632160bdf5dd182c",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "50bddd44644318526526fc89ddb5bf065269214449d92e373dcb462d217e9bc9",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "77adc4fc83c82019731ad0b9"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "ba6a37633cc35cbda0974ec2",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "4af983a01a48237929e8b958c9c245f2c156925468c65927dccd088e497567e4",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "088032d17c5a8a9e2688c0b6"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "91552e09b49e8836f81aa248",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "a1d64a8a4ddda3165ab3115d3835b25f09d50bb6f2d5d5793e4097447458d5d5",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "2a703d867c3d90794ed1874a"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "91552e09b49e8836f81aa248",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "a1d64a8a4ddda3165ab3115d3835b25f09d50bb6f2d5d5793e4097447458d5d5",
+      "stage": "profile",
+      "status": "ok",
+      "task_id": "9d4eee42864ae63f649d23a9"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "e38aec38e6e6bfa8641cc156",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "e8195101c8a86ea622fa18723dc4d5a3d1c734dc21e257ff96adc4708e594386",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "ef07b80db7a37eeb821e7aa6"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "5def1b9e0467dbd69361608e",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "d940ab7189f94600029480e6d652ac953056b76c04e4a2dacc7552191dad4ce2",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "7a1791014d026102d0382b68"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "ac7b4f3f2d221d2ae83ecd62",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "cb5a9db401848682804b3c73f4200e2cf42a79d94bcf11c2b4a6033b34d10335",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "d8044f6d6c21acf2bcf722de"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "c111a309707faeca5441965f",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "610ce6519ea73166b7cc23de8908c9db344db26765bee0f0c54e5e06ddba26a4",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "dd87a84a27198664c030d6dd"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "c111a309707faeca5441965f",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "610ce6519ea73166b7cc23de8908c9db344db26765bee0f0c54e5e06ddba26a4",
+      "stage": "profile",
+      "status": "ok",
+      "task_id": "551089bf6d538aca351c30b9"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "3242890b2180eae2941f6bd9",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "29a43bed964efe18255a69fbf154d65ebe810cc1081fd474ba20ae7264839c8a",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "11bd9c47ff2865bb682479c2"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "c2026bf16df46541f1037942",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "9f1e4e1345f9d0dd944d394a8d29a28c679b6b013b68b38a018559f8d0aa2322",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "c70b7124bbac73e465651646"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "ad8be58d6a459c2ea88d2c8b",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "de868afaedc91a4801801aabcd98e128ad14c006212c507ef3ba921dce06f7de",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "ce6faff7c5713ed11911d4f2"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "71d99dd331069e81ad32ac9a",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "b3765348b0a9e85568bc1d4d142bf251d443cdfc0a30d4fec70832a70b07dc0f",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "3b72e9601c5455e0c1734371"
+    },
+    {
+      "backend": "faiss",
+      "case_id": "c01bd6125466ad6fc79017bb",
+      "hardware_hash": "2d5b7cbe92ed39dc00d3774343caed745ae8686474d2dbed87f9c51d8b5df67f",
+      "input_hash": "0ebbb6bc0b9a5c80b467bebaa61f51fc9983399cb7d201bc6c56f5c23332ba09",
+      "stage": "benchmark",
+      "status": "ok",
+      "task_id": "d96a296f87713f06332f32d4"
+    }
+  ]
+}

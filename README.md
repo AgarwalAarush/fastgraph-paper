@@ -1,9 +1,15 @@
 # FastGraph: PCA-Subspace Exact GPU kNN
 
 This is the manuscript repository for the FastGraph paper. The current
-source and PDF contain the October 24, 2026 physics-facing CPC rewrite,
-retaining the preprint typography and the validated experimental record.
+source and PDF contain the physics-facing rewrite with November 11, 2026
+reviewer evidence: controlled covariance/feature scaling, explicit seed
+uncertainty, numerical checks, and sampled peak memory. This is an author-review
+draft, not a submitted or newly tagged release. The historical headline
+figures and preprint typography are retained.
 Historical *Array* and arXiv submission bundles remain archived separately.
+
+Read [the new evidence packet](submission/reviewer-evidence-2026-11-11/README.md)
+for source identities, replication limits, and reviewer requests still unmet.
 
 ## Current CPC Manuscript
 
