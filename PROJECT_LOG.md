@@ -839,3 +839,47 @@ author-confirmation/evidence flags, editor response, cover-letter draft,
 metadata, and validation record. CPC scope acceptance is not guaranteed by
 the rewrite; physics deployment evidence remains unmeasured, and authors
 must resolve the separate Array consideration before any new submission.
+
+## 2026-11-10 — Local reviewer experiments and reverse queue
+
+The user requested completing available local analysis/GPU work and reversing
+the operator's work order to reduce overlap. The first complementary A100
+campaign completed all 41 cases/421 bundles: 1,569 timing/quality rows and
+42 per-case PDFs, no failed/missing bundles. Full-A100 allocations including
+drift checks/audits totaled 3h10m12s; historical timing drift was −0.077%.
+
+New controlled synthetic measurements at N=1M/K=40 show d8/99% top-three
+variance at about 0.302s, 21.74–22.11x faster than cuVS and 8.50–13.09x
+faster than axis binning across two seeds. At 90% variance the corresponding
+time is 1.366s (~4.8x cuVS). Isotropic d10 takes 12.366s, about 1.86x slower
+than cuVS. Ratios pair identical inputs/hardware/protocol and median repeated
+timings; seed ranges are not confidence intervals. All checked exact-method
+outputs passed, but large inputs sample 512 queries rather than every query.
+Candidate counts support reduced search work on concentrated inputs. These
+measurements do not replace the historical detector-stress headline results.
+
+Launched a separate dependency-preserving reverse queue: 63 cases/668 bundles,
+frozen benchmark code b0ba36f, under `tmp/fgc-local-reverse-20261110/`. It adds
+K10/100, large-N bin/PCA-sample ablations, a third seed, equal-trace covariance,
+synthetic segmentation and explicit raw/standardized detector-numeric stress.
+Numerical gates passed; GPU64805 then CPU64806/GPU64807/CPU64808 form a bounded
+chain. Additional full-A100 ceiling 6h40, combined ceiling 9h50m12s. Pending work
+must not be reported as a completed result. CPU stages export/import separate
+returns and regenerate analysis automatically.
+
+Read-only numeric audit found top-three variance changes from 99.64% raw to
+77.42% standardized at d8 (d10: 99.63% to 79.05%). Feature units/names and event
+correspondence remain unconfirmed despite consistent offsets/row totals.
+Synthetic segments and unsegmented numeric stress therefore remain labeled
+controls. A CPU GravNet-layer forward/backward consistency check passed with
+random weights and a nonzero synthetic loss; no trained-model, reconstruction
+or GPU throughput claim follows. Actual checkpoint/model/data/loss assets are
+still needed for that experiment. A fresh CPU-only CUDA 12.4/sm90 installation
+audit is running separately; no H100 runtime result is available.
+
+Quantitative report: `Performance/revision_results/a100-complement-20261110/analysis/RESULTS.md`.
+Research code/coverage audit: private Performance branch
+`codex/reviewer-gpu-campaign`, `revision_campaign/LOCAL_STATUS.md`.
+The manuscript, author order, validated historical CSVs and figures were not
+changed by this research work. Original numbered reviews/Reviewer 18 attachment
+are still needed before a complete point-by-point response.
